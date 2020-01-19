@@ -5,7 +5,7 @@
 
 ## Setup
 
-* Install my fork of [Spotipy](https://github.com/JohannesPertl/spotipy)
+* Install my [fork of Spotipy](https://github.com/JohannesPertl/spotipy)
 
 ```
 pip install git+git://github.com/JohannesPertl/spotipy.git
