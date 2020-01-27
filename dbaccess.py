@@ -33,3 +33,17 @@ def insert_artists(conn, artists):
     cursor.executemany("INSERT OR IGNORE INTO artist VALUES (?,?)", prepared_artists)
     conn.commit()
     cursor.close()
+
+
+def get_artist_id_by_name(conn, artists):
+    """return the ids to the given artist names"""
+    cursor = conn.cursor()
+    # prepare the sql statement, that every object in the array
+    # has one placeholder in the "in function"
+    sql = "SELECT artist_id FROM artist WHERE artist_name in({seq})".format(
+        seq=','.join(['?'] * len(artists)))
+
+    cursor.execute(sql, artists)
+    ids = cursor.fetchall()
+    cursor.close()
+    return ids
