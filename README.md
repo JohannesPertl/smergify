@@ -4,7 +4,7 @@
 
 # TO-DO
 ## Raspberry PI
-- [ ] SSH Key
+- [x] SSH Key
 - [ ] DuckDNS
 
 ## Cronjobs
