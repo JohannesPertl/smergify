@@ -145,9 +145,9 @@ def insert_songs(conn, artist_name, songs):
 artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller",
            "Genetikk", "Jack Garrat"]
 songs = ['Set It Off', 'Watch It Burn', 'Atlas VIP', 'Loa', 'Kallisto', 'Sidewinder', 'Good Times Bad Times - Document One Remix', 'Atlas', 'Broken Pieces (feat. Nihils) - Culture Shock Remix', 'Good Times Bad Times']
-# insert_artists(get_connection(), artists)
-# assign_artist_to_user(get_connection(), artists, "manu", "long_term")
-# insert_group(get_connection(), "bestGroup")
-# assign_user_to_group(get_connection(), "testgruppe", "manu")
-# insert_songs(get_connection(), "Camo & Krooked", songs)
-insert_user(get_connection(), "Julia", "0000")
+insert_user(get_connection(), "Manu", "0000")
+insert_group(get_connection(), "GroupOne")
+assign_user_to_group(get_connection(), "GroupOne", "Manu")
+insert_artists(get_connection(), artists)
+assign_artist_to_user(get_connection(), artists, "Manu", "long_term")
+insert_songs(get_connection(), "Camo & Krooked", songs)
