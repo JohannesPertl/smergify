@@ -76,3 +76,9 @@ def switch_timerange(timerange_string):
         "mid_term": 3
     }
     return switcher.get(timerange_string)
+
+
+# !! just for testing !!
+artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller", "Genetikk"]
+insert_artists(get_connection(), artists)
+assign_artist_to_user(get_connection(), artists, "manu", "long_term")
