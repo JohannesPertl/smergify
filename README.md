@@ -31,7 +31,12 @@ https://stackoverflow.com/questions/35240994/how-to-run-inotifywait-continuously
  
 ## Database
 Python with Sqlite3
-- [ ] Create database functions necessary for [Smergify](#smergify)
+Create database functions necessary for [Smergify](#smergify)
+- [x] insert artists
+- [x] insert user_has_artist
+- [ ] insert group
+- [ ] insert group has user
+- [ ] insert songs
 
  
 ## Smergify
