@@ -12,3 +12,11 @@ def get_connection():
         print(e)
 
     return conn
+
+
+def get_user_id(conn, username):
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_id FROM user WHERE user_name = ?", (username,))
+    user_id = cursor.fetchone()
+    cursor.close()
+    return user_id[0]
