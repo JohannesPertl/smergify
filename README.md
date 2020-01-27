@@ -62,10 +62,10 @@ Python
 
 # Setup
 
-* Install my [fork of Spotipy](https://github.com/JohannesPertl/spotipy)
+* Install the required packages in [requirements.txt](requirements.txt)
 
 ```
-pip install git+git://github.com/JohannesPertl/spotipy.git
+pip install -r requirements.txt
 ```
 
 * Run the script once to login with your user accounts
