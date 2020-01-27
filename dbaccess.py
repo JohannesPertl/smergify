@@ -36,6 +36,13 @@ def get_user_id_by_name(conn, username):
     return user_id[0]
 
 
+def insert_user(conn, user_name, first_login):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", (None, user_name, first_login,))
+    conn.commit()
+    cursor.close()
+
+
 ########## artist and user_has_artist functions ##########
 
 def insert_artists(conn, artists):
@@ -138,8 +145,9 @@ def insert_songs(conn, artist_name, songs):
 artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller",
            "Genetikk", "Jack Garrat"]
 songs = ['Set It Off', 'Watch It Burn', 'Atlas VIP', 'Loa', 'Kallisto', 'Sidewinder', 'Good Times Bad Times - Document One Remix', 'Atlas', 'Broken Pieces (feat. Nihils) - Culture Shock Remix', 'Good Times Bad Times']
-insert_artists(get_connection(), artists)
-assign_artist_to_user(get_connection(), artists, "manu", "long_term")
-insert_group(get_connection(), "bestGroup")
-assign_user_to_group(get_connection(), "testgruppe", "manu")
-insert_songs(get_connection(), "Camo & Krooked", songs)
+# insert_artists(get_connection(), artists)
+# assign_artist_to_user(get_connection(), artists, "manu", "long_term")
+# insert_group(get_connection(), "bestGroup")
+# assign_user_to_group(get_connection(), "testgruppe", "manu")
+# insert_songs(get_connection(), "Camo & Krooked", songs)
+insert_user(get_connection(), "Julia", "0000")
