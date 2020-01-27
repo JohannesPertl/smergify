@@ -46,7 +46,7 @@ def insert_artists(conn, artists):
     for i in artists:
         prepared_artists.append((None, i))
 
-    cursor.executemany("INSERT OR IGNORE INTO artist VALUES (?,?)", prepared_artists)
+    cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", prepared_artists)
     conn.commit()
     cursor.close()
 
@@ -79,19 +79,36 @@ def assign_artist_to_user(conn, artists, user, timerange_string):
     for id in artist_id_array:
         prepared_data.append((None, timerange_int, id[0], user_id))
 
-    cursor.executemany("INSERT INTO user_has_artist VALUES (?, ?, ?, ?)", prepared_data)
+    cursor.executemany("INSERT INTO user_has_artist ('id', 'timerange', 'artist_id', 'user_id') VALUES (?, ?, ?, ?)", prepared_data)
     conn.commit()
     cursor.close()
 
 
 ########## group and group has user functions ##########
 
+def get_group_id(conn, group_name):
+    cursor = conn.cursor()
+    cursor.execute("SELECT group_id FROM user_group WHERE group_name = ?", (group_name,))
+    group_id = cursor.fetchone()
+    cursor.close()
+    return group_id[0]
+
 
 def insert_group(conn, group_name):
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO user_group VALUES (?, ?)", (None, group_name,))
+    cursor.execute("INSERT INTO user_group ('group_id', 'group_name') VALUES (?, ?)", (None, group_name,))
     conn.commit()
     cursor.close()
+
+
+def assign_user_to_group(conn, group_name, user_name):
+    cursor = conn.cursor()
+    user_id = get_user_id(conn, user_name)
+    group_id = get_group_id(conn, group_name)
+    cursor.execute("INSERT INTO group_has_user ('group_id', 'user_id') VALUES (?, ?)", (group_id, user_id,))
+    conn.commit()
+    cursor.close()
+
 
 
 ########## !! just for testing !! ##########
@@ -99,4 +116,5 @@ def insert_group(conn, group_name):
 #            "Genetikk", "Jack Garrat"]
 # insert_artists(get_connection(), artists)
 # assign_artist_to_user(get_connection(), artists, "manu", "long_term")
-insert_group(get_connection(), "testgruppe")
+insert_group(get_connection(), "bestGroup")
+assign_user_to_group(get_connection(), "testgruppe", "manu")
