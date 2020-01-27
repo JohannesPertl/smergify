@@ -3,6 +3,8 @@ import sqlite3
 CONST_DB_FILE = "data.db"
 
 
+########## helper functions ##########
+
 def get_connection():
     """Return the connection to the given database file"""
     conn = None
@@ -14,6 +16,18 @@ def get_connection():
     return conn
 
 
+def switch_timerange(timerange_string):
+    """return the defined int number for the given timerange_string"""
+    switcher = {
+        "long_term": 1,
+        "short_term": 2,
+        "mid_term": 3
+    }
+    return switcher.get(timerange_string)
+
+
+########## user functions ##########
+
 def get_user_id(conn, username):
     cursor = conn.cursor()
     cursor.execute("SELECT user_id FROM user WHERE user_name = ?", (username,))
@@ -21,6 +35,8 @@ def get_user_id(conn, username):
     cursor.close()
     return user_id[0]
 
+
+########## artist and user_has_artist functions ##########
 
 def insert_artists(conn, artists):
     """map the artists array and prepare a new one with a null value of the AI primary key"""
@@ -68,17 +84,19 @@ def assign_artist_to_user(conn, artists, user, timerange_string):
     cursor.close()
 
 
-def switch_timerange(timerange_string):
-    """return the defined int number for the given timerange_string"""
-    switcher = {
-        "long_term": 1,
-        "short_term": 2,
-        "mid_term": 3
-    }
-    return switcher.get(timerange_string)
+########## group and group has user functions ##########
 
 
-# !! just for testing !!
-artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller", "Genetikk"]
-insert_artists(get_connection(), artists)
-assign_artist_to_user(get_connection(), artists, "manu", "long_term")
+def insert_group(conn, group_name):
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO user_group VALUES (?, ?)", (None, group_name,))
+    conn.commit()
+    cursor.close()
+
+
+########## !! just for testing !! ##########
+# artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller",
+#            "Genetikk", "Jack Garrat"]
+# insert_artists(get_connection(), artists)
+# assign_artist_to_user(get_connection(), artists, "manu", "long_term")
+insert_group(get_connection(), "testgruppe")
