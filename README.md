@@ -5,7 +5,7 @@
 # TO-DO
 ## Raspberry PI
 - [x] SSH Key
-- [ ] DuckDNS
+- [x] DuckDNS
 
 ## Cronjobs
 - [ ] Every minute: [Monitoring](#monitoring)
