@@ -55,7 +55,7 @@ Python
 - [ ] Create Playlist for every group on Spotify (on App Account on/every User?)
 
 
-## Setup
+# Setup
 
 * Install my [fork of Spotipy](https://github.com/JohannesPertl/spotipy)
 
