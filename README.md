@@ -34,9 +34,11 @@ Python with Sqlite3
 Create database functions necessary for [Smergify](#smergify)
 - [x] insert artists
 - [x] insert user_has_artist
-- [ ] insert group
-- [ ] insert group has user
-- [ ] insert songs
+- [x] insert group
+- [x] insert group has user
+- [x] insert songs
+- [x] insert user
+- [ ] add try catch blocks - to prevent errors when referencing on e.g illegal users 
 
  
 ## Smergify
