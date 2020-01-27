@@ -28,7 +28,7 @@ def switch_timerange(timerange_string):
 
 ########## user functions ##########
 
-def get_user_id(conn, username):
+def get_user_id_by_name(conn, username):
     cursor = conn.cursor()
     cursor.execute("SELECT user_id FROM user WHERE user_name = ?", (username,))
     user_id = cursor.fetchone()
@@ -43,15 +43,15 @@ def insert_artists(conn, artists):
     cursor = conn.cursor()
 
     prepared_artists = []
-    for i in artists:
-        prepared_artists.append((None, i))
+    for artist in artists:
+        prepared_artists.append((None, artist))
 
     cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", prepared_artists)
     conn.commit()
     cursor.close()
 
 
-def get_artist_id_by_name(conn, artists):
+def get_artist_id_by_name_array(conn, artists):
     """return the ids to the given artist names"""
     cursor = conn.cursor()
     # prepare the sql statement, that every object in the array
@@ -65,15 +65,23 @@ def get_artist_id_by_name(conn, artists):
     return ids
 
 
+def get_artist_id_by_name(conn, artist):
+    cursor = conn.cursor()
+    cursor.execute("SELECT artist_id FROM artist WHERE artist_name = ?", (artist,))
+    artist_id = cursor.fetchone()
+    cursor.close()
+    return artist_id[0]
+
+
 def assign_artist_to_user(conn, artists, user, timerange_string):
     """Delete the users artists in the given time range and assign the new ones"""
     cursor = conn.cursor()
-    user_id = get_user_id(conn, user)
+    user_id = get_user_id_by_name(conn, user)
     timerange_int = switch_timerange(timerange_string)
     cursor.execute("DELETE FROM user_has_artist WHERE timerange = ? AND user_id = ?", (timerange_int, user_id,))
     conn.commit()
 
-    artist_id_array = get_artist_id_by_name(conn, artists)
+    artist_id_array = get_artist_id_by_name_array(conn, artists)
     # map the artist id array and push it to the insert data array
     prepared_data = []
     for id in artist_id_array:
@@ -86,7 +94,7 @@ def assign_artist_to_user(conn, artists, user, timerange_string):
 
 ########## group and group has user functions ##########
 
-def get_group_id(conn, group_name):
+def get_group_id_by_name(conn, group_name):
     cursor = conn.cursor()
     cursor.execute("SELECT group_id FROM user_group WHERE group_name = ?", (group_name,))
     group_id = cursor.fetchone()
@@ -103,18 +111,35 @@ def insert_group(conn, group_name):
 
 def assign_user_to_group(conn, group_name, user_name):
     cursor = conn.cursor()
-    user_id = get_user_id(conn, user_name)
-    group_id = get_group_id(conn, group_name)
+    user_id = get_user_id_by_name(conn, user_name)
+    group_id = get_group_id_by_name(conn, group_name)
     cursor.execute("INSERT INTO group_has_user ('group_id', 'user_id') VALUES (?, ?)", (group_id, user_id,))
+    conn.commit()
+    cursor.close()
+
+
+########## song functions ##########
+
+def insert_songs(conn, artist_name, songs):
+    cursor = conn.cursor()
+
+    artist_id = get_artist_id_by_name(conn, artist_name)
+    prepared_songs = []
+    for song in songs:
+        prepared_songs.append((None, song, artist_id))
+
+    cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", prepared_songs)
     conn.commit()
     cursor.close()
 
 
 
 ########## !! just for testing !! ##########
-# artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller",
-#            "Genetikk", "Jack Garrat"]
-# insert_artists(get_connection(), artists)
-# assign_artist_to_user(get_connection(), artists, "manu", "long_term")
+artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller",
+           "Genetikk", "Jack Garrat"]
+songs = ['Set It Off', 'Watch It Burn', 'Atlas VIP', 'Loa', 'Kallisto', 'Sidewinder', 'Good Times Bad Times - Document One Remix', 'Atlas', 'Broken Pieces (feat. Nihils) - Culture Shock Remix', 'Good Times Bad Times']
+insert_artists(get_connection(), artists)
+assign_artist_to_user(get_connection(), artists, "manu", "long_term")
 insert_group(get_connection(), "bestGroup")
 assign_user_to_group(get_connection(), "testgruppe", "manu")
+insert_songs(get_connection(), "Camo & Krooked", songs)
