@@ -20,7 +20,11 @@ Python
 - [ ] Get *user_name* and *user_group* (sys.argv or direct user input)
 - [ ] Create .cache file with Spotipy's ```util.prompt_for_user_token```
 - [ ] Copy .cache file to folder named like *user_group* on RaspberryPi via SCP
- 
+
+## Webserver for redirect URL of Client Authentication
+- [ ] Install Apache
+- [ ] Create simple index.html with info on how to proceed
+
 ## Monitoring
 Bash
 - [ ] Check for changes in *user_group* folders
