@@ -2,6 +2,7 @@ import sqlite3
 import logging
 import sys
 
+
 CONST_DB_FILE = "data.db"
 
 

@@ -9,7 +9,6 @@
 - [ ] Complete Setup as bash script
 
 ## Cronjobs
-- [ ] Every minute: [Monitoring](#monitoring)
 - [ ] Every week: [Smergify without arguments](#smergify)
 
 ## Client
@@ -21,18 +20,12 @@ Python
 - [ ] Get *user_name* and *user_group* (sys.argv or direct user input)
 - [ ] Create .cache file with Spotipy's ```util.prompt_for_user_token```
 - [ ] Copy .cache file to folder named like *user_group* on RaspberryPi via SCP
+- [ ] Execute [smergify.py](server/smergify.py) with *user_group* as command line argument
 
 ## Webserver for redirect URL of Client Authentication
 - [ ] Install Apache
 - [ ] Create simple index.html with info on how to proceed
 
-## Monitoring
-Bash
-- [ ] Check for changes in *user_group* folders
-    - [ ] If there are changes, call ```python3 smergify.py <user_group>```
-    
-Resources:  
-https://stackoverflow.com/questions/35240994/how-to-run-inotifywait-continuously-and-run-it-as-a-cron-or-deamon
  
 ## Database
 Python with Sqlite3
