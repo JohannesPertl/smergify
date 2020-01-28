@@ -3,7 +3,7 @@
 <p align=center>Shared Spotify playlists</p>
 
 # TO-DO
-## Raspberry PI
+## Raspberry Pi
 - [x] SSH Key
 - [x] DuckDNS
 
