@@ -9,7 +9,6 @@
 - [ ] Complete Setup as bash script
 
 ## Cronjobs
-- [ ] Every minute: [Monitoring](#monitoring)
 - [ ] Every week: [Smergify without arguments](#smergify)
 
 ## Client
@@ -21,7 +20,7 @@ Python
 - [ ] Get *user_name* and *user_group* (sys.argv or direct user input)
 - [ ] Create .cache file with Spotipy's ```util.prompt_for_user_token```
 - [ ] Copy .cache file to folder named like *user_group* on RaspberryPi via SCP
-- [ ] Execute [smergify.py](server/smergify.py)
+- [ ] Execute [smergify.py](server/smergify.py) with *user_group* as command line argument
 
 ## Webserver for redirect URL of Client Authentication
 - [ ] Install Apache
