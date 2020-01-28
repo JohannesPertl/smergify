@@ -47,7 +47,7 @@ Python
     - [ ] app_secret
     - [ ] scope
 - [ ] Check if sys.argv is empty
-    - [ ] If not: each argument is treated as one *user_group*
+    - [ ] If not: allow 1 argument (*user_group*)
     - [ ] If empty: every group (gets called in weekly cronjob)
 - [ ] Get users of every usergroup and authenticate them
     - [ ] Use Regex to read username from .cache file
