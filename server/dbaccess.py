@@ -1,5 +1,6 @@
 import sqlite3
 
+
 CONST_DB_FILE = "data.db"
 
 
@@ -10,7 +11,7 @@ def get_connection():
     conn = None
     try:
         conn = sqlite3.connect(CONST_DB_FILE)
-    except Error as e:
+    except Exception as e:
         print(e)
 
     return conn
