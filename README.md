@@ -6,6 +6,7 @@
 ## Raspberry Pi
 - [x] SSH Key
 - [x] DuckDNS
+- [ ] Complete Setup as bash script
 
 ## Cronjobs
 - [ ] Every minute: [Monitoring](#monitoring)
