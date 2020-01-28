@@ -1,4 +1,6 @@
 import sqlite3
+import logging
+import sys
 
 CONST_DB_FILE = "data.db"
 
@@ -10,8 +12,9 @@ def get_connection():
     conn = None
     try:
         conn = sqlite3.connect(CONST_DB_FILE)
-    except Error as e:
-        print(e)
+    except BaseException as e:
+        logging.error("AT dbaccess.get_connection %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
     return conn
 
@@ -30,16 +33,26 @@ def switch_timerange(timerange_string):
 
 def get_user_id_by_name(conn, username):
     cursor = conn.cursor()
-    cursor.execute("SELECT user_id FROM user WHERE user_name = ?", (username,))
-    user_id = cursor.fetchone()
+    try:
+        cursor.execute("SELECT user_id FROM user WHERE user_name = ?", (username,))
+        user_id = cursor.fetchone()
+    except BaseException as e:
+        logging.error("AT dbaccess.get_user_id_by_name: %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
     cursor.close()
     return user_id[0]
 
 
-def insert_user(conn, user_name, first_login):
+def insert_user(conn, user_name, user_id, first_login):
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", (None, user_name, first_login,))
-    conn.commit()
+    try:
+        cursor.execute("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", (user_id, user_name, first_login))
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT insert_user: %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
     cursor.close()
 
 
@@ -48,13 +61,13 @@ def insert_user(conn, user_name, first_login):
 def insert_artists(conn, artists):
     """map the artists array and prepare a new one with a null value of the AI primary key"""
     cursor = conn.cursor()
+    try:
+        cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", artists)
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT insert_artist: %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
-    prepared_artists = []
-    for artist in artists:
-        prepared_artists.append((None, artist))
-
-    cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", prepared_artists)
-    conn.commit()
     cursor.close()
 
 
@@ -66,16 +79,25 @@ def get_artist_id_by_name_array(conn, artists):
     sql = "SELECT artist_id FROM artist WHERE artist_name in({seq})".format(
         seq=','.join(['?'] * len(artists)))
 
-    cursor.execute(sql, artists)
-    ids = cursor.fetchall()
+    try:
+        cursor.execute(sql, artists)
+        ids = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.get_artist_id_by_name_array %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
     cursor.close()
     return ids
 
 
 def get_artist_id_by_name(conn, artist):
     cursor = conn.cursor()
-    cursor.execute("SELECT artist_id FROM artist WHERE artist_name = ?", (artist,))
-    artist_id = cursor.fetchone()
+    try:
+        cursor.execute("SELECT artist_id FROM artist WHERE artist_name = ?", (artist,))
+        artist_id = cursor.fetchone()
+    except BaseException as e:
+        logging.error("AT dbaccess.get_artist_id_by_name %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
     cursor.close()
     return artist_id[0]
 
@@ -85,17 +107,26 @@ def assign_artist_to_user(conn, artists, user, timerange_string):
     cursor = conn.cursor()
     user_id = get_user_id_by_name(conn, user)
     timerange_int = switch_timerange(timerange_string)
-    cursor.execute("DELETE FROM user_has_artist WHERE timerange = ? AND user_id = ?", (timerange_int, user_id,))
-    conn.commit()
 
-    artist_id_array = get_artist_id_by_name_array(conn, artists)
-    # map the artist id array and push it to the insert data array
+    try:
+        cursor.execute("DELETE FROM user_has_artist WHERE timerange = ? AND user_id = ?", (timerange_int, user_id,))
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT dbaccess.assign_artist_to_user %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    # map the artist array and create a new array with just the ids
     prepared_data = []
-    for id in artist_id_array:
-        prepared_data.append((None, timerange_int, id[0], user_id))
+    for artist in artists:
+        prepared_data.append((timerange_int, artist[0], user_id))
 
-    cursor.executemany("INSERT INTO user_has_artist ('id', 'timerange', 'artist_id', 'user_id') VALUES (?, ?, ?, ?)", prepared_data)
-    conn.commit()
+    try:
+        cursor.executemany("INSERT INTO user_has_artist ('timerange', 'artist_id', 'user_id') VALUES (?, ?, ?)", prepared_data)
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT dbaccess.assign_artist_to_user %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
     cursor.close()
 
 
@@ -103,16 +134,25 @@ def assign_artist_to_user(conn, artists, user, timerange_string):
 
 def get_group_id_by_name(conn, group_name):
     cursor = conn.cursor()
-    cursor.execute("SELECT group_id FROM user_group WHERE group_name = ?", (group_name,))
-    group_id = cursor.fetchone()
+    try:
+        cursor.execute("SELECT group_id FROM user_group WHERE group_name = ?", (group_name,))
+        group_id = cursor.fetchone()
+    except BaseException as e:
+        logging.error("AT dbaccess.get_group_id_by_name %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
     cursor.close()
     return group_id[0]
 
 
 def insert_group(conn, group_name):
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO user_group ('group_id', 'group_name') VALUES (?, ?)", (None, group_name,))
-    conn.commit()
+    try:
+        cursor.execute("INSERT INTO user_group ('group_id', 'group_name') VALUES (?, ?)", (None, group_name,))
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT dbaccess.insert_group %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
     cursor.close()
 
 
@@ -120,8 +160,13 @@ def assign_user_to_group(conn, group_name, user_name):
     cursor = conn.cursor()
     user_id = get_user_id_by_name(conn, user_name)
     group_id = get_group_id_by_name(conn, group_name)
-    cursor.execute("INSERT INTO group_has_user ('group_id', 'user_id') VALUES (?, ?)", (group_id, user_id,))
-    conn.commit()
+    try:
+        cursor.execute("INSERT INTO group_has_user ('group_id', 'user_id') VALUES (?, ?)", (group_id, user_id,))
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT dbaccess.assign_user_to_group %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
     cursor.close()
 
 
@@ -135,19 +180,13 @@ def insert_songs(conn, artist_name, songs):
     for song in songs:
         prepared_songs.append((None, song, artist_id))
 
-    cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", prepared_songs)
-    conn.commit()
+    try:
+        cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", prepared_songs)
+        conn.commit()
+    except BaseException as e:
+        logging.error("AT dbaccess.insert_songs %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
     cursor.close()
 
 
 
-########## !! just for testing !! ##########
-artists = ["Camo & Krooked", "Billy Talent", "Muse", "Odesza", "Korn", "Foo Fighters", "Delta Heavy", "Mac Miller",
-           "Genetikk", "Jack Garrat"]
-songs = ['Set It Off', 'Watch It Burn', 'Atlas VIP', 'Loa', 'Kallisto', 'Sidewinder', 'Good Times Bad Times - Document One Remix', 'Atlas', 'Broken Pieces (feat. Nihils) - Culture Shock Remix', 'Good Times Bad Times']
-insert_user(get_connection(), "Manu", "0000")
-insert_group(get_connection(), "GroupOne")
-assign_user_to_group(get_connection(), "GroupOne", "Manu")
-insert_artists(get_connection(), artists)
-assign_artist_to_user(get_connection(), artists, "Manu", "long_term")
-insert_songs(get_connection(), "Camo & Krooked", songs)
