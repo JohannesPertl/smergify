@@ -30,6 +30,15 @@ def switch_timerange(timerange_string):
     return switcher.get(timerange_string)
 
 
+def objects_to_list(object_list):
+    """create an attribute list of the given objects"""
+    object_attribute_list = []
+    for object in object_list:
+        object_attribute_list.append(object.to_list())
+
+    return object_attribute_list
+
+
 ########## user functions ##########
 
 def get_user_id_by_name(conn, username):
@@ -45,10 +54,11 @@ def get_user_id_by_name(conn, username):
     return user_id[0]
 
 
-def insert_user(conn, user_name, user_id, first_login):
+def insert_user(conn, users):
     cursor = conn.cursor()
+    users_list = objects_to_list(users)
     try:
-        cursor.execute("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", (user_id, user_name, first_login))
+        cursor.executemany("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", users_list)
         conn.commit()
     except BaseException as e:
         logging.error("AT insert_user: %s", e)
