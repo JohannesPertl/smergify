@@ -34,7 +34,7 @@ def objects_to_list(object_list):
     """create an attribute list of the given objects"""
     object_attribute_list = []
     for object in object_list:
-        object_attribute_list.append(object.to_list())
+        object_attribute_list.append(object.to_tuple())
 
     return object_attribute_list
 

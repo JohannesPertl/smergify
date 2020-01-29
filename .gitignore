@@ -222,4 +222,3 @@ fabric.properties
 
 # Exclude db file
 server/data.db
-server/data.db
