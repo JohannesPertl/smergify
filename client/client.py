@@ -1,23 +1,46 @@
 import paramiko
 import yaml
-
+import spotipy
+import spotipy.util as util
 
 with open("credentials.yaml") as config_file:
     CONFIG = yaml.safe_load(config_file)
 
+SCOPE = "user-top-read"
+
+
+def user_authentication(user_name):
+    # Spotify Auth + .cache File Generierung:
+    token = util.prompt_for_user_token(
+        username=user_name,
+        scope=SCOPE,
+        client_id=CONFIG["app_id"],
+        client_secret=CONFIG["app_secret"],
+        redirect_uri=CONFIG["redirect_uri"],
+        show_dialog=True
+    )
+    if not token:
+        user_authentication()
+
 
 def main():
-    # TODO: get user_name and user_group as input - for multiple users (dictionary of users = { "user" : "group"} ) - till exit
+    # User Input:
+    user_name = input("Please enter your username: ")
+    user_group = input("Please enter your groupname: ")
 
+    user_authentication(user_name)
+
+    # SSH Connection:
     ssh = create_ssh_connection(
-        CONFIG["username"],
-        CONFIG["hostname"],
-        CONFIG["port"],
-        CONFIG["private-key-file"],
-        CONFIG["password"]
+        username=CONFIG["username"],
+        hostname=CONFIG["hostname"],
+        port=CONFIG["port"],
+        rsa_key=CONFIG["private-key-file"],
+        password=CONFIG["password"]
     )
-    # TODO: get user token for spotify via prompt to create for each user in dict one cache file
+
     # TODO: transfer cache file to server (target: folder named like group). If folder already exists...
+
     ssh.close()
 
 
