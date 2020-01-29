@@ -173,21 +173,52 @@ def assign_user_to_group(conn, group_name, user_name):
 
 ########## song functions ##########
 
-def insert_songs(conn, artist_name, songs):
+def insert_songs(conn, songs):
     cursor = conn.cursor()
 
-    artist_id = get_artist_id_by_name(conn, artist_name)
-    prepared_songs = []
-    for song in songs:
-        prepared_songs.append((None, song, artist_id))
+    # artist_id = get_artist_id_by_name(conn, artist_name)
+    # prepared_songs = []
+    # for song in songs:
+    #     prepared_songs.append((None, song, artist_id))
 
     try:
-        cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", prepared_songs)
+        cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", songs)
         conn.commit()
     except BaseException as e:
         logging.error("AT dbaccess.insert_songs %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
     cursor.close()
+
+
+def get_songs_for_group(conn, groupname, timerange):
+    cursor = conn.cursor()
+    # get the members of the group
+    try:
+        cursor.execute("SELECT user_id "
+                       "FROM user_group AS g JOIN group_has_user AS ghu ON g.group_id = ghu.group_id "
+                       "WHERE g.group_name = ?", (groupname,))
+        users = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.insert_songs %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    # get the songs
+    try:
+        cursor.execute("SELECT song.song_id, song.song_title "
+                       "FROM song WHERE song.artist_id IN "
+                       "( SELECT uha1.artist_id "
+                       "FROM user_has_artist as uha1 JOIN user_has_artist as uha2 ON uha1.artist_id = uha2.artist_id "
+                       "WHERE (uha1.user_id = ? AND uha2.user_id = ?) "
+                       "AND uha1.timerange = ?)", (users[0][0], users[1][0], timerange))
+        songs = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.insert_songs %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    cursor.close()
+    return songs
+
+
 
 
 
