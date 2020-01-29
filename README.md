@@ -18,6 +18,7 @@ Python
     - [x] IP
     - [x] Password or SSH Key
 - [ ] Get *user_name* and *user_group* (sys.argv or direct user input)
+   - [ ] Check, if group is already full or user is already existing
 - [ ] Create .cache file with Spotipy's ```util.prompt_for_user_token```
 - [ ] Copy .cache file to folder named like *user_group* on RaspberryPi via SCP
 - [ ] Execute [smergify.py](server/smergify.py) with *user_group* as command line argument
