@@ -13,10 +13,10 @@
 
 ## Client
 Python
-- [ ] Config file for SSH Credentials
-    - [ ] Username (pi)
-    - [ ] IP
-    - [ ] Password or SSH Key
+- [x] Config file for SSH Credentials
+    - [x] Username (pi)
+    - [x] IP
+    - [x] Password or SSH Key
 - [ ] Get *user_name* and *user_group* (sys.argv or direct user input)
 - [ ] Create .cache file with Spotipy's ```util.prompt_for_user_token```
 - [ ] Copy .cache file to folder named like *user_group* on RaspberryPi via SCP
