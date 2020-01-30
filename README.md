@@ -17,10 +17,10 @@ Python
     - [x] Username (pi)
     - [x] IP
     - [x] Password or SSH Key
-- [ ] Get *user_name* and *user_group* (sys.argv or direct user input)
-   - [ ] Check, if group is already full or user is already existing
-- [ ] Create .cache file with Spotipy's ```util.prompt_for_user_token```
-- [ ] Copy .cache file to folder named like *user_group* on RaspberryPi via SCP
+- [x] Get *user_name* and *user_group* (sys.argv or direct user input)
+   - [x] Check, if group is already full or user is already existing
+- [x] Create .cache file with Spotipy's ```util.prompt_for_user_token```
+- [x] Copy .cache file to folder named like *user_group* on RaspberryPi via SSH
 - [ ] Execute [smergify.py](server/smergify.py) with *user_group* as command line argument
 
 ## Webserver for redirect URL of Client Authentication
