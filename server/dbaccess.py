@@ -72,13 +72,15 @@ def insert_user(conn, users):
 def insert_artists(conn, artists):
     """map the artists array and prepare a new one with a null value of the AI primary key"""
     cursor = conn.cursor()
+    artist_list = objects_to_list(artists)
     try:
-        cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", artists)
+        cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", artist_list)
         conn.commit()
     except BaseException as e:
         logging.error("AT insert_artist: %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
+    # print(artist_list)
     cursor.close()
 
 
@@ -156,10 +158,11 @@ def get_group_id_by_name(conn, group_name):
     return group_id[0]
 
 
-def insert_group(conn, group_name):
+def insert_group(conn, groups):
     cursor = conn.cursor()
+    groups_list = objects_to_list(groups)
     try:
-        cursor.execute("INSERT INTO user_group ('group_id', 'group_name') VALUES (?, ?)", (None, group_name,))
+        cursor.execute("INSERT INTO user_group ('group_id', 'group_name') VALUES (?, ?)", groups_list)
         conn.commit()
     except BaseException as e:
         logging.error("AT dbaccess.insert_group %s", e)
