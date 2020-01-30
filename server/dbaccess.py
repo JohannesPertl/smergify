@@ -30,6 +30,15 @@ def switch_timerange(timerange_string):
     return switcher.get(timerange_string)
 
 
+def objects_to_list(object_list):
+    """create an attribute list of the given objects"""
+    object_attribute_list = []
+    for object in object_list:
+        object_attribute_list.append(object.to_tuple())
+
+    return object_attribute_list
+
+
 ########## user functions ##########
 
 def get_user_id_by_name(conn, username):
@@ -45,10 +54,11 @@ def get_user_id_by_name(conn, username):
     return user_id[0]
 
 
-def insert_user(conn, user_name, user_id, first_login):
+def insert_user(conn, users):
     cursor = conn.cursor()
+    users_list = objects_to_list(users)
     try:
-        cursor.execute("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", (user_id, user_name, first_login))
+        cursor.executemany("INSERT INTO user ('user_id', 'user_name', 'first_login') VALUES (?, ?, ?)", users_list)
         conn.commit()
     except BaseException as e:
         logging.error("AT insert_user: %s", e)
@@ -173,21 +183,52 @@ def assign_user_to_group(conn, group_name, user_name):
 
 ########## song functions ##########
 
-def insert_songs(conn, artist_name, songs):
+def insert_songs(conn, songs):
     cursor = conn.cursor()
 
-    artist_id = get_artist_id_by_name(conn, artist_name)
-    prepared_songs = []
-    for song in songs:
-        prepared_songs.append((None, song, artist_id))
+    # artist_id = get_artist_id_by_name(conn, artist_name)
+    # prepared_songs = []
+    # for song in songs:
+    #     prepared_songs.append((None, song, artist_id))
 
     try:
-        cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", prepared_songs)
+        cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)", songs)
         conn.commit()
     except BaseException as e:
         logging.error("AT dbaccess.insert_songs %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
     cursor.close()
+
+
+def get_songs_for_group(conn, groupname, timerange):
+    cursor = conn.cursor()
+    # get the members of the group
+    try:
+        cursor.execute("SELECT user_id "
+                       "FROM user_group AS g JOIN group_has_user AS ghu ON g.group_id = ghu.group_id "
+                       "WHERE g.group_name = ?", (groupname,))
+        users = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.insert_songs %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    # get the songs
+    try:
+        cursor.execute("SELECT song.song_id, song.song_title "
+                       "FROM song WHERE song.artist_id IN "
+                       "( SELECT uha1.artist_id "
+                       "FROM user_has_artist as uha1 JOIN user_has_artist as uha2 ON uha1.artist_id = uha2.artist_id "
+                       "WHERE (uha1.user_id = ? AND uha2.user_id = ?) "
+                       "AND uha1.timerange = ?)", (users[0][0], users[1][0], timerange))
+        songs = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.insert_songs %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    cursor.close()
+    return songs
+
+
 
 
 

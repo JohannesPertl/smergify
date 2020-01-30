@@ -219,3 +219,6 @@ fabric.properties
 # Markdown Navigator plugin
 .idea/**/markdown-navigator.xml
 .idea/**/markdown-navigator/
+
+# Exclude db file
+server/data.db
