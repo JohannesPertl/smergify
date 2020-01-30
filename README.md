@@ -43,20 +43,20 @@ Create database functions necessary for [Smergify](#smergify)
  
 ## Smergify
 Python
-- [ ] Config.yaml
-    - [ ] app_id
-    - [ ] app_secret
-    - [ ] scope
-- [ ] Check if sys.argv is empty
-    - [ ] If not: allow 1 argument (*user_group*)
+- [x] Config.yaml
+    - [x] app_id
+    - [x] app_secret
+    - [x] redirect_uri
+- [x] Check if sys.argv is empty
+    - [x] If not: treat arguments like group_names and only use those
     - [ ] If empty: every group (gets called in weekly cronjob)
-- [ ] Get users of every usergroup and authenticate them
-    - [ ] Use Regex to read username from .cache file
+- [x] Get users of every usergroup and authenticate them
+    - [x] Use Regex to read username from .cache file
     - [ ] Save users in DB
         - [ ] If already existing but new group: Change to new group
-- [ ] Get artists from users via spotipy
+- [x] Get artists from users via spotipy
     - [ ] Save artists in DB
-- [ ] Get top songs from every artist
+- [x] Get top songs from every artist
     - [ ] Save songs in DB
 - [ ] Merge songs for every group
 - [ ] Create Playlist for every group on Spotify (on App Account on/every User?)
