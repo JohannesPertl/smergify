@@ -2,10 +2,12 @@ import logging
 import os
 import re
 import sys
-import yaml
+
 import spotipy
+import yaml
 from spotipy import util
-from server.entities import Group, User
+
+from server.entities import Group, User, Artist
 
 with open("config.yaml") as config_file:
     CONFIG = yaml.safe_load(config_file)
@@ -76,6 +78,34 @@ def authenticate_user(user_name, cache_path):
     return token
 
 
+def create_top_artists_from_user(user, time_range):
+    artists = list()
+    spotify = spotipy.Spotify(auth=user.token)
+    spotify_artists = (spotify.current_user_top_artists(limit=50, time_range=time_range))["items"]
+    for a in spotify_artists:
+        name = a['name']
+        id = a['uri']
+        artist = Artist(
+            artist_name=name,
+            artist_id=id,
+            time_range=time_range
+        )
+        artists.append(artist)
+    return artists
+
+
+def create_artists_for_users(users):
+    artists = list()
+    for u in users:
+        short_term_artists = create_top_artists_from_user(u, "short_term")
+        medium_term_artists = create_top_artists_from_user(u, "medium_term")
+        long_term_artists = create_top_artists_from_user(u, "long_term")
+
+        artists += short_term_artists + medium_term_artists + long_term_artists
+
+    return artists
+
+
 def main():
     if arguments_given():
         groups = create_groups_from_arguments()
@@ -83,6 +113,7 @@ def main():
         groups = create_groups_from_path(GROUPS_PATH)
 
     users = create_users_for_groups(groups)
+    artists = create_artists_for_users(users)
 
 
 if __name__ == "__main__":
