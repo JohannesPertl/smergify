@@ -90,6 +90,7 @@ def create_top_artists_from_user(user, time_range):
             artist_id=id,
             time_range=time_range
         )
+        user.artists.append(artist)
         artists.append(artist)
     return artists
 
@@ -116,5 +117,7 @@ def main():
     artists = create_artists_for_users(users)
 
 
+
+    # TODO: current_user_top_artists(limit=20, offset=0, time_range='medium_term')
 if __name__ == "__main__":
     main()
