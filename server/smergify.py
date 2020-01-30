@@ -63,9 +63,9 @@ def authenticate_user(user_name, cache_path):
     token = util.prompt_for_user_token(
         username=user_name,
         scope=SCOPE,
-        client_id=CONFIG["app_id"],
-        client_secret=CONFIG["app_secret"],
-        redirect_uri=CONFIG["redirect_uri"],
+        client_id=CONFIG["app-id"],
+        client_secret=CONFIG["app-secret"],
+        redirect_uri=CONFIG["redirect-uri"],
         show_dialog=True,
         cache_path=cache_path
     )
