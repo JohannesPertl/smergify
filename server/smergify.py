@@ -3,7 +3,9 @@ import random
 import re
 import sys
 
+
 # Constants
+from server import DB
 from server.entities import User, Song, Group, Artist
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -126,17 +128,23 @@ def create_artist_songs(artists, spotify):
 def main():
     groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
 
-    users = create_users_for_groups(groups)
-
-    artists = create_artists_for_users(users)
-
-    spotify = users[0].spotify  # Spotify needs a user token to make requests
-    songs = create_artist_songs(artists, spotify)
+    # users = create_users_for_groups(groups)
+    #
+    # artists = create_artists_for_users(users)
+    #
+    # spotify = users[0].spotify  # Spotify needs a user token to make requests
+    # songs = create_artist_songs(artists, spotify)
 
     # TODO: Insert into database
+
+    db = DB()
+    db.insert_groups(groups)
+    # db.insert_users(users)
+    # db.insert_artists(artists)
+    # db.insert_songs(songs)
     # TODO: Read songs from database
-    songs = random.sample(songs, 10)
-    create_or_update_playlist("TEST", users[0], songs)
+    # songs = random.sample(songs, 10)
+    # create_or_update_playlist("TEST", users[0], songs)
 
 
 if __name__ == "__main__":
