@@ -222,3 +222,5 @@ fabric.properties
 
 # Exclude db file
 server/data.db
+server/.cache*
+server/main.py
