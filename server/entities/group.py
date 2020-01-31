@@ -13,3 +13,5 @@ class Group:
     def __len__(self):
         return len(self.users)
 
+    def is_pair(self):
+        return len(self) == 2

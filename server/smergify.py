@@ -7,9 +7,7 @@ import yaml
 from server import DB
 from server.entities import User, Song, Group, Artist
 
-
 # Constants
-
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
 
@@ -17,14 +15,37 @@ GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
 with open("config.yaml") as config_file:
     CONFIG = yaml.safe_load(config_file)
 
+
+def main():
+    # Create and link entities
+    groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
+    users = create_users_for_groups(groups)
+    artists = create_artists_for_users(users)
+    songs = create_artist_songs(artists, users[0].spotify)  # Spotify needs a user token to make requests
+
+    # Save to database
+    db = DB(CONFIG["database"])
+    db.insert_groups(groups)
+    db.insert_artists(artists)
+    db.insert_users(users)
+    db.insert_songs(songs)
+
+    # Create playlists for every user in every group
+    for group in groups:
+        group_songs = get_songs_for_group(db, group)
+        playlist_songs = randomize_songs(group_songs)
+        for user in group.users:
+            create_or_update_playlist(group.group_name, user, playlist_songs)
+
+
 # BUG: Playlist must public or else it can't be found
 def get_playlist_id_by_name(user, name):
     playlists = user.spotify.user_playlists(user.spotify_id)["items"]
-    return [p['id'] for p in playlists if p['name'] == name][0]
+    existing_playlists = [p['id'] for p in playlists if p['name'] == name]
+    return existing_playlists[0] if existing_playlists else False
 
 
-def create_or_update_playlist(name, user, songs, public=True):
-    song_ids = [song.song_id for song in songs]
+def create_or_update_playlist(name, user, song_ids, public=True):
     playlist_id = get_playlist_id_by_name(user, name)
     if playlist_id:
         # Updating playlist
@@ -35,7 +56,6 @@ def create_or_update_playlist(name, user, songs, public=True):
         user.spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
 
 
-# Check if script was called with arguments
 def arguments_given():
     return len(sys.argv) > 1
 
@@ -105,6 +125,7 @@ def create_user_artists_in_term(user, time_range):
             artist_id=id,
             time_range=time_range
         )
+        user.artists.append(artist)
         artists_to_return.append(artist)
 
     return artists_to_return
@@ -130,23 +151,17 @@ def create_artist_songs(artists, spotify):
     return songs_to_return
 
 
-def main():
-    groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
-    users = create_users_for_groups(groups)
-    artists = create_artists_for_users(users)
+def get_songs_for_group(db, group):
+    if group.is_pair():
+        pair_songs = db.get_matched_song_ids_for_two_users(group)
+        if len(pair_songs) > CONFIG['minimum-playlist-size']:
+            return pair_songs
+    return db.get_matched_song_ids_for_group(group)
 
-    spotify = users[0].spotify  # Spotify needs a user token to make requests
-    songs = create_artist_songs(artists, spotify)
 
-    db = DB(CONFIG["database"])
-    db.insert_groups(groups)
-    db.insert_users(users)
-    db.insert_artists(artists)
-    db.insert_songs(songs)
-
-    # TODO: Read songs from database
-    # songs = random.sample(songs, 10)
-    # create_or_update_playlist("TEST", users[0], songs)
+def randomize_songs(songs):
+    max_size = CONFIG['maximum-playlist-size']
+    return songs if len(songs) < max_size else random.sample(songs, max_size)
 
 
 if __name__ == "__main__":
