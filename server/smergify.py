@@ -5,8 +5,11 @@ import sys
 
 import yaml
 
-from server import DB
-from server.entities import User, Song, Group, Artist
+from server.db import DB
+from server.entities.artist import Artist
+from server.entities.group import Group
+from server.entities.song import Song
+from server.entities.user import User
 
 # Constants
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
