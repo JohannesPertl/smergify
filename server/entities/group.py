@@ -10,3 +10,6 @@ class Group:
     def to_tuple(self):
         return None, self.group_name
 
+    def __len__(self):
+        return len(self.users)
+
