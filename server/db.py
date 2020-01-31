@@ -15,7 +15,6 @@ class DB:
         try:
             conn = sqlite3.connect(self.file_location)
         except Exception as e:
-            print(e)
             logging.error("AT dbaccess.get_connection %s", e)
         return conn
 
@@ -62,6 +61,7 @@ class DB:
             logging.error("AT insert_users: %s", e)
         cursor.close()
         self.assign_users_to_group(users)
+        self.assign_artists_to_users(users)
 
     ########## artist and user_has_artist functions ##########
 
@@ -204,17 +204,17 @@ class DB:
 
         cursor.close()
 
-    def get_matched_songs_for_two_users(self, group, timerange):
+    def get_matched_songs_for_two_users(self, group):
         cursor = self.conn.cursor()
         # get the members of the group
         try:
             cursor.execute("SELECT user_id "
                            "FROM user_group AS g JOIN group_has_user AS ghu ON g.group_id = ghu.group_id "
                            "WHERE g.group_name = ?", (group.group_name,))
-            users = cursor.fetchall()
         except BaseException as e:
             logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
 
+        users = cursor.fetchall()
         # get the songs
         matched_songs = []
         if len(users) == 2:
@@ -223,8 +223,7 @@ class DB:
                                "FROM song WHERE song.artist_id IN "
                                "( SELECT uha1.artist_id "
                                "FROM user_has_artist as uha1 JOIN user_has_artist as uha2 ON uha1.artist_id = uha2.artist_id "
-                               "WHERE (uha1.user_id = ? AND uha2.user_id = ?) "
-                               "AND uha1.timerange = ?)", (users[0][0], users[1][0], timerange))
+                               "WHERE (uha1.user_id = ? AND uha2.user_id = ?))", (users[0][0], users[1][0]))
                 matched_songs = cursor.fetchall()
             except BaseException as e:
                 logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
@@ -263,4 +262,3 @@ class DB:
             logging.error("AT dbaccess.get_matched_songs_for_group %s", e)
 
         song_ids = self.extract(songs)
-        print(song_ids)
