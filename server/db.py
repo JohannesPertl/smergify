@@ -60,8 +60,8 @@ class DB:
             self.conn.commit()
         except BaseException as e:
             logging.error("AT insert_users: %s", e)
-
         cursor.close()
+        self.assign_users_to_group(users)
 
     ########## artist and user_has_artist functions ##########
 
@@ -196,7 +196,7 @@ class DB:
         prepared_data = self.objects_to_list(songs)
 
         try:
-            cursor.executemany("INSERT INTO song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)",
+            cursor.executemany("INSERT OR IGNORE INTO  song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)",
                                prepared_data)
             self.conn.commit()
         except BaseException as e:
