@@ -1,31 +1,31 @@
-import logging
 import os
 import random
 import re
 import sys
 
-import spotipy
-import yaml
-from spotipy import util
-
-from server.entities import Group, User, Artist, Song
-
-with open("config.yaml") as config_file:
-    CONFIG = yaml.safe_load(config_file)
-
 # Constants
+from server.entities import User, Song, Group, Artist
+
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
-SCOPE = "user-top-read playlist-modify-public user-top-read playlist-modify-private"
 
 
-# Playlist
-def create_playlist(name, user, songs, public=False):
-    spotify = spotipy.Spotify(auth=user.token)
-    spotify_id = re.sub(r"spotify:user:", "", user.user_id)
-    playlist = spotify.user_playlist_create(spotify_id, name, public=public)
+# BUG: Playlist must public or else it can't be found
+def get_playlist_id_by_name(user, name):
+    playlists = user.spotify.user_playlists(user.spotify_id)["items"]
+    return [p['id'] for p in playlists if p['name'] == name][0]
+
+
+def create_or_update_playlist(name, user, songs, public=True):
     song_ids = [song.song_id for song in songs]
-    spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
+    playlist_id = get_playlist_id_by_name(user, name)
+    if playlist_id:
+        # Updating playlist
+        user.spotify.user_playlist_replace_tracks(user, playlist_id, song_ids)
+    else:
+        # Creating new playlist
+        playlist = user.spotify.user_playlist_create(user.spotify_id, name, public=public)
+        user.spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
 
 
 # Check if script was called with arguments
@@ -33,18 +33,28 @@ def arguments_given():
     return len(sys.argv) > 1
 
 
+def create_group(name):
+    group_path = os.path.join(GROUPS_PATH, name)
+    return Group(
+        group_name=name,
+        group_path=group_path
+    )
+
+
 def create_groups_from_arguments():
     groups = list()
     for name in sys.argv:
-        groups.append(Group(name))
+        new_group = create_group(name)
+        groups.append(new_group)
     return groups
 
 
-def create_groups_from_path(path):
+def create_all_groups():
     groups = list()
-    for f in os.scandir(path):
+    for f in os.scandir(GROUPS_PATH):
         if f.is_dir():
-            groups.append(Group(f.name))
+            new_group = create_group(f.name)
+            groups.append(new_group)
     return groups
 
 
@@ -52,54 +62,34 @@ def create_users_for_groups(groups):
     users_to_return = list()
 
     for group in groups:
-        group_path = os.path.join(GROUPS_PATH, group.group_name)
-        for file in os.scandir(group_path):
+        for file in os.scandir(group.group_path):
             if file.is_file() and file.name.startswith(".cache-"):
                 user_name = re.sub(r"\.cache-", "", file.name)  # Read username from cache file by cutting .cache-
-                cache_path = os.path.join(group_path, file.name)  # build cache path
-
-                spotify_token = authenticate_user(user_name, cache_path)
-                user_id = get_user_uri_from_spotify(spotify_token)
                 user = User(
                     user_name=user_name,
-                    user_id=user_id,
-                    token=spotify_token,
-                    user_group=group)
-
+                    user_group=group
+                )
                 group.users.append(user)
                 users_to_return.append(user)
 
     return users_to_return
 
 
-def get_user_uri_from_spotify(token):
-    spotify = spotipy.Spotify(auth=token)
-    user = spotify.current_user()
-    return user["uri"]
+def create_artists_for_users(users):
+    artists = list()
+    for user in users:
+        short_term_artists = create_user_artists_in_term(user, "short_term")
+        medium_term_artists = create_user_artists_in_term(user, "medium_term")
+        long_term_artists = create_user_artists_in_term(user, "long_term")
+
+        artists += short_term_artists + medium_term_artists + long_term_artists
+    return artists
 
 
-def authenticate_user(user_name, cache_path):
-    token = util.prompt_for_user_token(
-        username=user_name,
-        scope=SCOPE,
-        client_id=CONFIG["app-id"],
-        client_secret=CONFIG["app-secret"],
-        redirect_uri=CONFIG["redirect-uri"],
-        show_dialog=True,
-        cache_path=cache_path
-    )
-    if not token:
-        logging.critical(f"File for user authentication named .cache-{user_name} does not exist! Exiting..")
-        sys.exit(1)
-
-    return token
-
-
-def create_top_artists_from_user(user, time_range):
+def create_user_artists_in_term(user, time_range):
     artists_to_return = list()
 
-    spotify = spotipy.Spotify(auth=user.token)
-    spotify_artists = (spotify.current_user_top_artists(limit=50, time_range=time_range))["items"]
+    spotify_artists = (user.spotify.current_user_top_artists(limit=50, time_range=time_range))["items"]
     for artist in spotify_artists:
         name = artist['name']
         id = artist['uri']
@@ -108,32 +98,16 @@ def create_top_artists_from_user(user, time_range):
             artist_id=id,
             time_range=time_range
         )
-
-        user.artists.append(artist)
         artists_to_return.append(artist)
 
     return artists_to_return
 
 
-def create_artists_for_users(users):
-    artists_to_return = list()
-
-    for user in users:
-        short_term_artists = create_top_artists_from_user(user, "short_term")
-        medium_term_artists = create_top_artists_from_user(user, "medium_term")
-        long_term_artists = create_top_artists_from_user(user, "long_term")
-
-        artists_to_return += short_term_artists + medium_term_artists + long_term_artists
-
-    return artists_to_return
-
-
-def create_songs_for_artists(artists, token):
+def create_artist_songs(artists, spotify):
     songs_to_return = list()
 
-    sp = spotipy.Spotify(auth=token)
     for artist in artists:
-        top_tracks = sp.artist_top_tracks(artist.artist_id)["tracks"]
+        top_tracks = spotify.artist_top_tracks(artist.artist_id)["tracks"]
         for track in top_tracks:
             song_title = track["name"]
             song_id = track["uri"]
@@ -150,19 +124,19 @@ def create_songs_for_artists(artists, token):
 
 
 def main():
-    if arguments_given():
-        groups = create_groups_from_arguments()
-    else:
-        groups = create_groups_from_path(GROUPS_PATH)
+    groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
 
     users = create_users_for_groups(groups)
+
     artists = create_artists_for_users(users)
 
-    token = users[0].token  # Spotify needs a user token to make requests
-    songs = create_songs_for_artists(artists, token)
+    spotify = users[0].spotify  # Spotify needs a user token to make requests
+    songs = create_artist_songs(artists, spotify)
 
-    songs = random.sample(songs, 5)
-    create_playlist("test", users[0], songs)
+    # TODO: Insert into database
+    # TODO: Read songs from database
+    songs = random.sample(songs, 10)
+    create_or_update_playlist("TEST", users[0], songs)
 
 
 if __name__ == "__main__":
