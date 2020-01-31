@@ -75,25 +75,24 @@ class DB:
         except BaseException as e:
             logging.error("AT insert_artists: %s", e)
 
-        # print(artist_list)
         cursor.close()
 
-    # def get_artist_ids_by_name( artists):
-    #     """return the ids to the given artists"""
-    #     cursor = conn.cursor()
-    #     # prepare the sql statement, that every object in the array
-    #     # has one placeholder in the "in function"
-    #     sql = "SELECT artist_id FROM artist WHERE artist_name in({seq})".format(
-    #         seq=','.join(['?'] * len(artists)))
-    #
-    #     try:
-    #         cursor.execute(sql, artists)
-    #         ids = cursor.fetchall()
-    #     except BaseException as e:
-    #         logging.error("AT dbaccess.get_artist_id_by_name_array %s", e)
-    #         
-    #     cursor.close()
-    #     return ids
+    def get_artist_ids_by_name(self, artists):
+        """return the ids to the given artists"""
+        cursor = self.conn.cursor()
+        # prepare the sql statement, that every object in the array
+        # has one placeholder in the "in function"
+        sql = "SELECT artist_id FROM artist WHERE artist_name in({seq})".format(
+            seq=','.join(['?'] * len(artists)))
+
+        try:
+            cursor.execute(sql, artists)
+        except BaseException as e:
+            logging.error("AT dbaccess.get_artist_id_by_name_array %s", e)
+
+        ids = cursor.fetchall()
+        cursor.close()
+        return ids
 
     def get_artist_id_by_name(self, artist):
         cursor = self.conn.cursor()
