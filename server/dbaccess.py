@@ -39,6 +39,10 @@ def objects_to_list(object_list):
     return object_attribute_list
 
 
+def extract(lst):
+    return [item[0] for item in lst]
+
+
 ########## user functions ##########
 
 def get_user_id_by_name(conn, user):
@@ -61,7 +65,7 @@ def insert_users(conn, users):
         cursor.executemany("INSERT OR IGNORE INTO user ('user_id', 'user_name' ) VALUES (?, ?)", users_list)
         conn.commit()
     except BaseException as e:
-        logging.error("AT insert_user: %s", e)
+        logging.error("AT insert_users: %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
     cursor.close()
@@ -77,7 +81,7 @@ def insert_artists(conn, artists):
         cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", artist_list)
         conn.commit()
     except BaseException as e:
-        logging.error("AT insert_artist: %s", e)
+        logging.error("AT insert_artists: %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
     # print(artist_list)
@@ -197,7 +201,7 @@ def assign_users_to_group(conn, users):
         cursor.executemany("INSERT OR IGNORE INTO group_has_user ('group_id', 'user_id') VALUES (?, ?)", prepared_data)
         conn.commit()
     except BaseException as e:
-        logging.error("AT dbaccess.assign_user_to_group %s", e)
+        logging.error("AT dbaccess.assign_users_to_group %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
     cursor.close()
@@ -219,7 +223,7 @@ def insert_songs(conn, songs):
     cursor.close()
 
 
-def get_matched_songs_for_group(conn, group, timerange):
+def get_matched_songs_for_two_users(conn, group, timerange):
     cursor = conn.cursor()
     # get the members of the group
     try:
@@ -228,7 +232,7 @@ def get_matched_songs_for_group(conn, group, timerange):
                        "WHERE g.group_name = ?", (group.group_name,))
         users = cursor.fetchall()
     except BaseException as e:
-        logging.error("AT dbaccess.get_songs_for_group %s", e)
+        logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
         print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
     # get the songs
@@ -243,8 +247,46 @@ def get_matched_songs_for_group(conn, group, timerange):
                            "AND uha1.timerange = ?)", (users[0][0], users[1][0], timerange))
             matched_songs = cursor.fetchall()
         except BaseException as e:
-            logging.error("AT dbaccess.get_songs_for_group %s", e)
+            logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
             print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
 
     cursor.close()
     return matched_songs
+
+
+def get_matched_songs_for_group(conn, group):
+    """get all artists from the users in the list - and their songs"""
+    cursor = conn.cursor()
+    user_list = []
+    for user in group.users:
+        user_list.append(user.user_id)
+
+    user_list = ['ociuss', '9nl8rcwkt44mqk7qlid6ua4uk']
+    try:
+        sql_artist_ids = ("SELECT artist.artist_id FROM user_has_artist "
+                          "JOIN artist on user_has_artist.artist_id = artist.artist_id "
+                          "WHERE user_has_artist.user_id in ({seq}) GROUP BY artist.artist_name".format(
+                seq=','.join(['?'] * len(user_list))))
+
+        cursor.execute(sql_artist_ids, user_list)
+        artists = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.get_matched_songs_for_group %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    artist_ids = extract(artists)
+
+    try:
+        sql_song_ids = ("SELECT song.song_id FROM song "
+                        "WHERE song.artist_id in ({seq})".format(
+                        seq=','.join(['?'] * len(artist_ids))))
+
+        cursor.execute(sql_song_ids, artist_ids)
+        songs = cursor.fetchall()
+    except BaseException as e:
+        logging.error("AT dbaccess.get_matched_songs_for_group %s", e)
+        print("Ein Fehler ist aufgetreten - ueberpruefen Sie das Log-File")
+
+    song_ids = extract(songs)
+    print(song_ids)
+
