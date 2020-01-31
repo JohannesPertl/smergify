@@ -17,15 +17,19 @@ Python
     - [x] Username (pi)
     - [x] IP
     - [x] Password or SSH Key
-- [x] Get *user_name* and *user_group* (sys.argv or direct user input)
-   - [x] Check, if group is already full or user is already existing
+- [x] Get SSH connection to RaspberryPi
+- [x] Get *user_group* via input
+- [x] Create folder named like *user_group* remotely on RaspberryPi via SSH
+- [x] Get *user_name* for two users via input
+   - [x] Check, if user is already existing
 - [x] Create .cache file with Spotipy's ```util.prompt_for_user_token```
-- [x] Copy .cache file to folder named like *user_group* on RaspberryPi via SSH
-- [ ] Execute [smergify.py](server/smergify.py) with *user_group* as command line argument
+- [x] Copy .cache file to folder named like *user_group*
+- [x] Execute [smergify.py](server/smergify.py) with *user_group* as command line argument
+- [x] Delete .cache files locally
 
 ## Webserver for redirect URL of Client Authentication
-- [ ] Install Apache
-- [ ] Create simple index.html with info on how to proceed
+- [x] Install Apache
+- [x] Create simple index.html with info on how to proceed
 
  
 ## Database
@@ -49,17 +53,17 @@ Python
     - [x] redirect_uri
 - [x] Check if sys.argv is empty
     - [x] If not: treat arguments like group_names and only use those
-    - [ ] If empty: every group (gets called in weekly cronjob)
+    - [x] If empty: every group (gets called in weekly cronjob)
 - [x] Get users of every usergroup and authenticate them
     - [x] Use Regex to read username from .cache file
-    - [ ] Save users in DB
+    - [x] Save users in DB
         - [ ] If already existing but new group: Change to new group
 - [x] Get artists from users via spotipy
-    - [ ] Save artists in DB
+    - [x] Save artists in DB
 - [x] Get top songs from every artist
-    - [ ] Save songs in DB
-- [ ] Merge songs for every group
-- [ ] Create Playlist for every group on Spotify (on App Account on/every User?)
+    - [x] Save songs in DB
+- [x] Merge songs for every group
+- [x] Create Playlist for every group on Spotify (on every useraccount)
 - [ ] Error Logging
 
 
