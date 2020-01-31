@@ -6,7 +6,7 @@ import spotipy
 import yaml
 from spotipy import util
 
-SCOPE = "user-top-read playlist-modify-public user-top-read playlist-modify-private"
+SCOPE = "user-top-read playlist-modify-public playlist-modify-private"
 with open("config.yaml") as config_file:
     CONFIG = yaml.safe_load(config_file)
 
