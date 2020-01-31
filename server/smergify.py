@@ -2,15 +2,20 @@ import os
 import random
 import re
 import sys
+import yaml
+
+from server import DB
+from server.entities import User, Song, Group, Artist
 
 
 # Constants
-from server import DB
-from server.entities import User, Song, Group, Artist
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
 
+# CONFIG
+with open("config.yaml") as config_file:
+    CONFIG = yaml.safe_load(config_file)
 
 # BUG: Playlist must public or else it can't be found
 def get_playlist_id_by_name(user, name):
@@ -127,21 +132,18 @@ def create_artist_songs(artists, spotify):
 
 def main():
     groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
+    users = create_users_for_groups(groups)
+    artists = create_artists_for_users(users)
 
-    # users = create_users_for_groups(groups)
-    #
-    # artists = create_artists_for_users(users)
-    #
-    # spotify = users[0].spotify  # Spotify needs a user token to make requests
-    # songs = create_artist_songs(artists, spotify)
+    spotify = users[0].spotify  # Spotify needs a user token to make requests
+    songs = create_artist_songs(artists, spotify)
 
-    # TODO: Insert into database
-
-    db = DB()
+    db = DB(CONFIG["database"])
     db.insert_groups(groups)
-    # db.insert_users(users)
-    # db.insert_artists(artists)
-    # db.insert_songs(songs)
+    db.insert_users(users)
+    db.insert_artists(artists)
+    db.insert_songs(songs)
+
     # TODO: Read songs from database
     # songs = random.sample(songs, 10)
     # create_or_update_playlist("TEST", users[0], songs)

@@ -3,10 +3,8 @@ import sqlite3
 
 
 class DB:
-    def __init__(self, location=None):
-        if location is None:
-            self.file_location = "data.db"
-        self.file_location = location
+    def __init__(self, file_location):
+        self.file_location = file_location
         self.conn = self.get_connection()
 
     ########## helper functions ##########
@@ -17,6 +15,7 @@ class DB:
         try:
             conn = sqlite3.connect(self.file_location)
         except Exception as e:
+            print(e)
             logging.error("AT dbaccess.get_connection %s", e)
         return conn
 

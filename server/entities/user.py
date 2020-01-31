@@ -7,6 +7,8 @@ import yaml
 from spotipy import util
 
 SCOPE = "user-top-read playlist-modify-public user-top-read playlist-modify-private"
+with open("config.yaml") as config_file:
+    CONFIG = yaml.safe_load(config_file)
 
 
 class User:
@@ -16,7 +18,12 @@ class User:
         self.user_name = user_name
         self.user_group = user_group
         self.artists = artists
-        self.spotify = self.authenticate()
+        self.spotify = self.authenticate(
+            CONFIG["app-id"],
+            CONFIG["app-secret"],
+            CONFIG["redirect-uri"],
+            SCOPE
+        )
         self.user_id = self.get_uri_from_spotify()
         self.spotify_id = self.get_id_from_spotify()
 
@@ -31,10 +38,7 @@ class User:
         user = self.spotify.current_user()
         return user["id"]
 
-    def authenticate(self, cache_path=None):
-        with open("config.yaml") as config_file:
-            config = yaml.safe_load(config_file)
-
+    def authenticate(self, app_id, app_secret, redirect_uri, scope, cache_path=None):
         if cache_path is None:
             group_path = self.user_group.group_path
             file_name = ".cache-" + self.user_name
@@ -42,10 +46,10 @@ class User:
 
         token = util.prompt_for_user_token(
             username=self.user_name,
-            scope=SCOPE,
-            client_id=config["app-id"],
-            client_secret=config["app-secret"],
-            redirect_uri=config["redirect-uri"],
+            scope=scope,
+            client_id=app_id,
+            client_secret=app_secret,
+            redirect_uri=redirect_uri,
             show_dialog=True,
             cache_path=cache_path
         )
