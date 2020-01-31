@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+
 import yaml
 
 from server import DB
@@ -70,7 +71,7 @@ def create_group(name):
 
 def create_groups_from_arguments():
     groups = list()
-    for name in sys.argv:
+    for name in sys.argv[1:]:
         new_group = create_group(name)
         groups.append(new_group)
     return groups
