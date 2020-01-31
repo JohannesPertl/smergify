@@ -204,7 +204,7 @@ class DB:
 
         cursor.close()
 
-    def get_matched_songs_for_two_users(self, group):
+    def get_matched_song_ids_for_two_users(self, group):
         cursor = self.conn.cursor()
         # get the members of the group
         try:
@@ -229,9 +229,9 @@ class DB:
                 logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
 
         cursor.close()
-        return matched_songs
+        return self.extract(matched_songs)
 
-    def get_matched_songs_for_group(self, group):
+    def get_matched_song_ids_for_group(self, group):
         """get all artists from the users in the list - and their songs"""
         cursor = self.conn.cursor()
         user_list = []
@@ -257,8 +257,8 @@ class DB:
                 seq=','.join(['?'] * len(artist_ids))))
 
             cursor.execute(sql_song_ids, artist_ids)
-            songs = cursor.fetchall()
         except BaseException as e:
             logging.error("AT dbaccess.get_matched_songs_for_group %s", e)
 
-        song_ids = self.extract(songs)
+        songs = cursor.fetchall()
+        return self.extract(songs)
