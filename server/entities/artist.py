@@ -10,5 +10,3 @@ class Artist:
     def to_tuple(self):
         return self.artist_id, self.artist_name
 
-    def get_name(self):
-        return self.artist_name
