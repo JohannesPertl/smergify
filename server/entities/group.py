@@ -7,4 +7,4 @@ class Group:
         self.group_id = group_id
 
     def to_tuple(self):
-        return self.group_name, self.group_id
+        return None, self.group_name
