@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import re
 import sys
 
@@ -15,9 +16,19 @@ with open("config.yaml") as config_file:
 # Constants
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
-SCOPE = "user-top-read"
+SCOPE = "user-top-read playlist-modify-public user-top-read playlist-modify-private"
 
 
+# Playlist
+def create_playlist(name, user, songs, public=False):
+    spotify = spotipy.Spotify(auth=user.token)
+    spotify_id = re.sub(r"spotify:user:", "", user.user_id)
+    playlist = spotify.user_playlist_create(spotify_id, name, public=public)
+    song_ids = [song.song_id for song in songs]
+    spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
+
+
+# Check if script was called with arguments
 def arguments_given():
     return len(sys.argv) > 1
 
@@ -45,12 +56,15 @@ def create_users_for_groups(groups):
         for file in os.scandir(group_path):
             if file.is_file() and file.name.startswith(".cache-"):
                 user_name = re.sub(r"\.cache-", "", file.name)  # Read username from cache file by cutting .cache-
-
                 cache_path = os.path.join(group_path, file.name)  # build cache path
 
                 spotify_token = authenticate_user(user_name, cache_path)
-                user_id = get_user_id_from_spotify(spotify_token)
-                user = User(user_name, user_id, spotify_token, group)
+                user_id = get_user_uri_from_spotify(spotify_token)
+                user = User(
+                    user_name=user_name,
+                    user_id=user_id,
+                    token=spotify_token,
+                    user_group=group)
 
                 group.users.append(user)
                 users_to_return.append(user)
@@ -58,7 +72,7 @@ def create_users_for_groups(groups):
     return users_to_return
 
 
-def get_user_id_from_spotify(token):
+def get_user_uri_from_spotify(token):
     spotify = spotipy.Spotify(auth=token)
     user = spotify.current_user()
     return user["uri"]
@@ -147,7 +161,9 @@ def main():
     token = users[0].token  # Spotify needs a user token to make requests
     songs = create_songs_for_artists(artists, token)
 
-    # TODO: Create Playlist
+    songs = random.sample(songs, 5)
+    create_playlist("test", users[0], songs)
+
 
 if __name__ == "__main__":
     main()
