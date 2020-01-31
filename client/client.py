@@ -1,22 +1,18 @@
+import os
 import paramiko
 import yaml
 import spotipy.util as util
+import glob
 
 # get credentials from yaml
 with open("credentials.yaml") as config_file:
     CONFIG = yaml.safe_load(config_file)
 
 # permissions for spotify app
-SCOPE = "user-top-read"
+SCOPE = "user-top-read playlist-modify-public playlist-modify-private"
 
 
 def main():
-    # User Input:
-    user_name = input("Please enter your username: ")
-    user_group = input("Please enter your groupname: ")
-
-    user_authentication(user_name)
-
     # SSH Connection:
     ssh = create_ssh_connection(
         username=CONFIG["username"],
@@ -26,11 +22,14 @@ def main():
         password=CONFIG["password"]
     )
 
-    cache_file = ".cache-" + user_name
-    server_path = CONFIG["server-path"]
+    # User input for group-name:
+    user_group = input("Please enter your groupname: ")
 
     # FTP client:
     ftp_client = ssh.open_sftp()
+
+    # Define paths
+    server_path = CONFIG["server-path"]
 
     # List files on server:
     dirs = ftp_client.listdir(server_path)
@@ -38,13 +37,38 @@ def main():
     # check + create directory for group:
     create_group_folder_serverside(dirs, server_path, user_group, ftp_client)
 
-    # File transfer to server:
-    target_path = server_path + user_group + "/" + cache_file
-    transfer_file(ftp_client, cache_file, target_path)
+    # Get user input from 2 users + authenticate both + transfer .cache files to server
+    user_list = []
+    while True:
+        user_name = input_user_name(user_list)
+
+        user_authentication(user_name)
+
+        cache_file = ".cache-" + user_name
+        target_path = server_path + user_group + "/" + cache_file
+        transfer_file(ftp_client, cache_file, target_path)
+
+        user_list.append(user_name)
+        if len(user_list) == 2:
+            break
 
     ftp_client.close()
+
+    # Execute Smergify remote from server
+    stdin, stdout, stderr = ssh.exec_command("python3 " + CONFIG["smergify-script"] + " " + user_group)
+    print(stderr)
+
     ssh.close()
 
+    delete_cache_files_on_client()
+
+
+# Validate username
+def input_user_name(existing_users):
+    while True:
+        user_name = input("Please enter your username: ")
+        if user_name and user_name not in existing_users:
+            return user_name
 
 # Spotify authentication + cache-file generation:
 def user_authentication(user_name):
@@ -82,6 +106,11 @@ def transfer_file(ftp_client, source_path, target_path):
 def create_group_folder_serverside(dirs, path, group_name, ftp_client):
     if group_name not in dirs:
         ftp_client.mkdir(path + group_name)
+
+
+def delete_cache_files_on_client():
+    for f in glob.glob(".cache-*"):
+        os.remove(f)
 
 
 if __name__ == "__main__":
