@@ -3,8 +3,8 @@ import os
 import random
 import re
 import sys
-import yaml
 from datetime import datetime
+import yaml
 
 # Constants
 from server.db import DB
@@ -26,7 +26,7 @@ def main():
     logging.basicConfig(filename=os.path.join(ROOT_PATH, "logs", CONFIG["log-file-name"]), level=logging.INFO)
 
     # Create and link entities
-    groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
+    groups = create_groups_from_arguments() if arguments_given() else create_all_groups_from_path()
     users = create_users_for_groups(groups)
     artists = create_artists_for_users(users)
     songs = create_artist_songs(artists, users[0].spotify)  # Spotify needs a user token to make requests
@@ -44,7 +44,6 @@ def main():
         playlist_songs = randomize_songs(group_songs)
         for user in group.users:
             create_or_update_playlist(group.group_name, user, playlist_songs)
-        logging.info(f"New playlist for group \"{group.group_name}\" was created at {datetime.now()}")
 
 
 # BUG: Playlist must public or else it can't be found
@@ -55,14 +54,17 @@ def get_playlist_id_by_name(user, name):
 
 
 def create_or_update_playlist(name, user, song_ids, public=True):
+    """Create new playlist or update the tracks it's already existing"""
     playlist_id = get_playlist_id_by_name(user, name)
     if playlist_id:
         # Updating playlist
         user.spotify.user_playlist_replace_tracks(user, playlist_id, song_ids)
+        logging.info(f"Playlist \"{name}\" was updated at {datetime.now()}")
     else:
         # Creating new playlist
         playlist = user.spotify.user_playlist_create(user.spotify_id, name, public=public)
         user.spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
+        logging.info(f"New playlist \"{name}\" was created at {datetime.now()}")
 
 
 def arguments_given():
@@ -70,6 +72,7 @@ def arguments_given():
 
 
 def create_group(name):
+    """Create a single group from """
     group_path = os.path.join(GROUPS_PATH, name)
     return Group(
         group_name=name,
@@ -85,7 +88,7 @@ def create_groups_from_arguments():
     return groups
 
 
-def create_all_groups():
+def create_all_groups_from_path():
     groups = list()
     for f in os.scandir(GROUPS_PATH):
         if f.is_dir():
