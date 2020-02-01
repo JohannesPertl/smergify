@@ -1,13 +1,15 @@
 import logging
 import os
 import sys
-
 import spotipy
 import yaml
 from spotipy import util
 
 SCOPE = "user-top-read playlist-modify-public playlist-modify-private"
-with open("config.yaml") as config_file:
+
+ROOT_PATH = os.path.join(os.path.dirname(__file__), '..')
+
+with open(os.path.join(ROOT_PATH, "config.yaml")) as config_file:
     CONFIG = yaml.safe_load(config_file)
 
 
