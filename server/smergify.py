@@ -60,12 +60,12 @@ def create_or_update_playlist(name, user, song_ids, public=True):
     if playlist_id:
         # Updating playlist
         user.spotify.user_playlist_replace_tracks(user, playlist_id, song_ids)
-        logging.info(f"Playlist \"{name}\" for user \"{user.user_name}\" was updated at {datetime.now()}")
+        logging.info(f"[{datetime.now()}] Playlist \"{name}\" was updated for user \"{user.user_name}\"")
     else:
         # Creating new playlist
         playlist = user.spotify.user_playlist_create(user.spotify_id, name, public=public)
         user.spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
-        logging.info(f"New playlist \"{name}\" for user \"{user.user_name}\" was created at {datetime.now()}")
+        logging.info(f"[{datetime.now()}] New playlist \"{name}\" was created for user \"{user.user_name}\"")
 
 
 def arguments_given():
@@ -82,7 +82,7 @@ def create_group(name):
 
 
 def create_groups_from_arguments():
-    logging.info(f"Received new request for group(s) \"{' '.join(sys.argv[1:])}\"")
+    logging.info(f"[{datetime.now()}] Received new request for group(s) \"{' '.join(sys.argv[1:])}\"")
     groups = list()
     for name in sys.argv[1:]:
         new_group = create_group(name)
@@ -91,7 +91,7 @@ def create_groups_from_arguments():
 
 
 def create_all_groups_from_path():
-    logging.info(f"Received new request for all groups")
+    logging.info(f"[{datetime.now()}] Received new request for all groups")
     groups = list()
     for f in os.scandir(GROUPS_PATH):
         if f.is_dir():
