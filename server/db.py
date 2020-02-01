@@ -15,7 +15,7 @@ class DB:
         try:
             conn = sqlite3.connect(self.file_location)
         except Exception as e:
-            logging.error("AT dbaccess.get_connection %s", e)
+            logging.error("AT db.get_connection %s", e)
         return conn
 
     def switch_timerange(self, timerange_string):
@@ -44,10 +44,10 @@ class DB:
         cursor = self.conn.cursor()
         try:
             cursor.execute("SELECT user_id FROM user WHERE user_name = ?", (user.user_name,))
-            user_id = cursor.fetchone()
         except BaseException as e:
-            logging.error("AT dbaccess.get_user_id_by_name: %s", e)
+            logging.error("AT db.get_user_id_by_name: %s", e)
 
+        user_id = cursor.fetchone()
         cursor.close()
         return user_id[0]
 
@@ -88,7 +88,7 @@ class DB:
         try:
             cursor.execute(sql, artists)
         except BaseException as e:
-            logging.error("AT dbaccess.get_artist_id_by_name_array %s", e)
+            logging.error("AT db.get_artist_id_by_name_array %s", e)
 
         ids = cursor.fetchall()
         cursor.close()
@@ -98,10 +98,10 @@ class DB:
         cursor = self.conn.cursor()
         try:
             cursor.execute("SELECT artist_id FROM artist WHERE artist_name = ?", (artist.artist_name,))
-            artist_id = cursor.fetchone()
         except BaseException as e:
-            logging.error("AT dbaccess.get_artist_id_by_name %s", e)
+            logging.error("AT db.get_artist_id_by_name %s", e)
 
+        artist_id = cursor.fetchone()
         cursor.close()
         return artist_id[0]
 
@@ -123,7 +123,7 @@ class DB:
                                (time_range, user.user_id,))
                 self.conn.commit()
             except BaseException as e:
-                logging.error("AT dbaccess.delete_artists_by_timeranges %s", e)
+                logging.error("AT db.delete_artists_by_timeranges %s", e)
 
         cursor.close()
 
@@ -144,7 +144,7 @@ class DB:
                     prepared_data)
                 self.conn.commit()
             except BaseException as e:
-                logging.error("AT dbaccess.assign_artists_to_users %s", e)
+                logging.error("AT db.assign_artists_to_users %s", e)
 
         cursor.close()
 
@@ -154,22 +154,22 @@ class DB:
         cursor = self.conn.cursor()
         try:
             cursor.execute("SELECT group_id FROM user_group WHERE group_name = ?", (group.group_name,))
-            group_id = cursor.fetchone()
         except BaseException as e:
-            logging.error("AT dbaccess.get_group_id_by_name %s", e)
+            logging.error("AT db.get_group_id_by_name %s", e)
+            print("test")
 
+        group_id = cursor.fetchone()
         cursor.close()
         return group_id[0]
 
     def insert_groups(self, groups):
         cursor = self.conn.cursor()
         groups_list = self.objects_to_list(groups)
-        # print(groups_list)
         try:
             cursor.executemany("INSERT OR IGNORE INTO user_group ('group_id', 'group_name') VALUES (?, ?)", groups_list)
             self.conn.commit()
         except BaseException as e:
-            logging.error("AT dbaccess.insert_groups %s", e)
+            logging.error("AT db.insert_groups %s", e)
 
         cursor.close()
 
@@ -183,7 +183,7 @@ class DB:
                                prepared_data)
             self.conn.commit()
         except BaseException as e:
-            logging.error("AT dbaccess.assign_users_to_group %s", e)
+            logging.error("AT db.assign_users_to_group %s", e)
 
         cursor.close()
 
@@ -199,7 +199,7 @@ class DB:
                                prepared_data)
             self.conn.commit()
         except BaseException as e:
-            logging.error("AT dbaccess.insert_songs %s", e)
+            logging.error("AT db.insert_songs %s", e)
 
         cursor.close()
 
@@ -211,7 +211,7 @@ class DB:
                            "FROM user_group AS g JOIN group_has_user AS ghu ON g.group_id = ghu.group_id "
                            "WHERE g.group_name = ?", (group.group_name,))
         except BaseException as e:
-            logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
+            logging.error("AT db.get_matched_songs_for_two_users %s", e)
 
         users = cursor.fetchall()
         # get the songs
@@ -225,7 +225,7 @@ class DB:
                                "WHERE (uha1.user_id = ? AND uha2.user_id = ?))", (users[0][0], users[1][0]))
                 matched_songs = cursor.fetchall()
             except BaseException as e:
-                logging.error("AT dbaccess.get_matched_songs_for_two_users %s", e)
+                logging.error("AT db.get_matched_songs_for_two_users %s", e)
 
         cursor.close()
         return self.extract(matched_songs)
@@ -244,10 +244,10 @@ class DB:
                 seq=','.join(['?'] * len(user_list))))
 
             cursor.execute(sql_artist_ids, user_list)
-            artists = cursor.fetchall()
         except BaseException as e:
-            logging.error("AT dbaccess.get_matched_songs_for_group %s", e)
+            logging.error("AT db.get_matched_songs_for_group %s", e)
 
+        artists = cursor.fetchall()
         artist_ids = self.extract(artists)
 
         try:
@@ -257,7 +257,7 @@ class DB:
 
             cursor.execute(sql_song_ids, artist_ids)
         except BaseException as e:
-            logging.error("AT dbaccess.get_matched_songs_for_group %s", e)
+            logging.error("AT db.get_matched_songs_for_group %s", e)
 
         songs = cursor.fetchall()
         return self.extract(songs)
