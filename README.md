@@ -64,7 +64,8 @@ Python
     - [x] Save songs in DB
 - [x] Merge songs for every group
 - [x] Create Playlist for every group on Spotify (on every useraccount)
-- [ ] Error Logging
+- [x] Error Logging
+- [x] Playlist creation monitoring
 
 
 # Setup
