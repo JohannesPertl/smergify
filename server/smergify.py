@@ -1,26 +1,30 @@
+import logging
 import os
 import random
 import re
 import sys
-
 import yaml
+from datetime import datetime
 
+# Constants
 from server.db import DB
 from server.entities.artist import Artist
 from server.entities.group import Group
 from server.entities.song import Song
 from server.entities.user import User
 
-# Constants
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
 
 # CONFIG
-with open("config.yaml") as config_file:
+with open(os.path.join(ROOT_PATH, "config.yaml")) as config_file:
     CONFIG = yaml.safe_load(config_file)
 
 
 def main():
+    # Define logging config
+    logging.basicConfig(filename=os.path.join(ROOT_PATH, "logs", CONFIG["log-file-name"]), level=logging.INFO)
+
     # Create and link entities
     groups = create_groups_from_arguments() if arguments_given() else create_all_groups()
     users = create_users_for_groups(groups)
@@ -28,7 +32,7 @@ def main():
     songs = create_artist_songs(artists, users[0].spotify)  # Spotify needs a user token to make requests
 
     # Save to database
-    db = DB(CONFIG["database"])
+    db = DB(os.path.join(ROOT_PATH, CONFIG["database-name"]))
     db.insert_groups(groups)
     db.insert_artists(artists)
     db.insert_users(users)
@@ -40,6 +44,7 @@ def main():
         playlist_songs = randomize_songs(group_songs)
         for user in group.users:
             create_or_update_playlist(group.group_name, user, playlist_songs)
+        logging.info(f"New playlist for group \"{group.group_name}\" was created at {datetime.now()}")
 
 
 # BUG: Playlist must public or else it can't be found
