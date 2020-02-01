@@ -42,7 +42,7 @@ Create database functions necessary for [Smergify](#smergify)
 - [x] insert songs
 - [x] insert user
 - [x] add try catch blocks - to prevent errors when referencing on e.g illegal users 
-- [ ] get matching artists/songs group
+- [x] get matching artists/songs group
 
  
 ## Smergify

@@ -36,6 +36,7 @@ class DB:
         return object_attribute_list
 
     def extract(self, lst):
+        """return every first element of a more dimensional list"""
         return [item[0] for item in lst]
 
     ########## user functions ##########
@@ -52,6 +53,7 @@ class DB:
         return user_id[0]
 
     def insert_users(self, users):
+        """insert a list of users - given by a object list"""
         cursor = self.conn.cursor()
         users_list = self.objects_to_list(users)
         try:
@@ -106,11 +108,12 @@ class DB:
         return artist_id[0]
 
     def get_timeranges_of_user_artists(self, user):
+        """get every artist id of the given user object"""
         timeranges_multiple = []
         for artist in user.artists:
             timeranges_multiple.append(artist.time_range)
 
-        # filter the multiple time ranges
+        # remove the duplicate entries of the time range ids
         return list(set(timeranges_multiple))
 
     def delete_artists_by_timeranges(self, user):
@@ -174,6 +177,7 @@ class DB:
         cursor.close()
 
     def assign_users_to_group(self, users):
+        """assign the user to the group - attribute given in the user object"""
         cursor = self.conn.cursor()
         prepared_data = []
         for user in users:
@@ -204,6 +208,8 @@ class DB:
         cursor.close()
 
     def get_matched_song_ids_for_two_users(self, group):
+        """get all artists which are in both libraries of the users
+        and fetch the songs from these artist - only works with two users"""
         cursor = self.conn.cursor()
         # get the members of the group
         try:
