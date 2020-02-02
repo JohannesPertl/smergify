@@ -55,8 +55,7 @@ def main():
     ftp_client.close()
 
     # Execute Smergify remote from server
-    stdin, stdout, stderr = ssh.exec_command("python3 " + CONFIG["smergify-script"] + " " + user_group)
-    print(stderr)
+    stdin, stdout, stderr = ssh.exec_command("bash start_smergify.sh " + user_group)
 
     ssh.close()
 
@@ -69,6 +68,7 @@ def input_user_name(existing_users):
         user_name = input("Please enter your username: ")
         if user_name and user_name not in existing_users:
             return user_name
+
 
 # Spotify authentication + cache-file generation:
 def user_authentication(user_name):
