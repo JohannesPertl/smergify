@@ -1,6 +1,4 @@
 import os
-import time
-
 import paramiko
 import yaml
 import spotipy.util as util
@@ -24,54 +22,40 @@ def main():
         password=CONFIG["password"]
     )
 
-    command = "bash s.sh"
-    # Send the command (non-blocking)
-    stdin, stdout, stderr = ssh.exec_command(command)
+    # User input for group-name:
+    user_group = input("Please enter your groupname: ")
 
-    ssh.close()
+    # FTP client:
+    ftp_client = ssh.open_sftp()
 
-    # ssh.exec_command("")  # Non-blocking call
-    # exit_status = stdout.channel.exit_status_ready()    # Blocking call
-    # if exit_status == 0:
-    #     print("Success")
-    # else:
-    #     print("Error", exit_status)
-    #
-    # # User input for group-name:
-    # user_group = input("Please enter your groupname: ")
-    #
-    # # FTP client:
-    # ftp_client = ssh.open_sftp()
-    #
-    # # Define paths
-    # server_path = CONFIG["server-path"]
-    #
-    # # List files on server:
-    # dirs = ftp_client.listdir(server_path)
-    #
-    # # check + create directory for group:
-    # create_group_folder_serverside(dirs, server_path, user_group, ftp_client)
-    #
-    # # Get user input from 2 users + authenticate both + transfer .cache files to server
-    # user_list = []
-    # while True:
-    #     user_name = input_user_name(user_list)
-    #
-    #     user_authentication(user_name)
-    #
-    #     cache_file = ".cache-" + user_name
-    #     target_path = server_path + user_group + "/" + cache_file
-    #     transfer_file(ftp_client, cache_file, target_path)
-    #
-    #     user_list.append(user_name)
-    #     if len(user_list) == 2:
-    #         break
-    #
-    # ftp_client.close()
-    #
-    # # Execute Smergify remote from server
-    # stdin, stdout, stderr = ssh.exec_command("python3 " + CONFIG["smergify-script"] + " " + user_group)
-    # print(stderr)
+    # Define paths
+    server_path = CONFIG["server-path"]
+
+    # List files on server:
+    dirs = ftp_client.listdir(server_path)
+
+    # check + create directory for group:
+    create_group_folder_serverside(dirs, server_path, user_group, ftp_client)
+
+    # Get user input from 2 users + authenticate both + transfer .cache files to server
+    user_list = []
+    while True:
+        user_name = input_user_name(user_list)
+
+        user_authentication(user_name)
+
+        cache_file = ".cache-" + user_name
+        target_path = server_path + user_group + "/" + cache_file
+        transfer_file(ftp_client, cache_file, target_path)
+
+        user_list.append(user_name)
+        if len(user_list) == 2:
+            break
+
+    ftp_client.close()
+
+    # Execute Smergify remote from server
+    stdin, stdout, stderr = ssh.exec_command("bash start_smergify.sh " + user_group)
 
     ssh.close()
 
@@ -84,6 +68,7 @@ def input_user_name(existing_users):
         user_name = input("Please enter your username: ")
         if user_name and user_name not in existing_users:
             return user_name
+
 
 # Spotify authentication + cache-file generation:
 def user_authentication(user_name):
