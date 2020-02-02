@@ -2,12 +2,46 @@ import logging
 import sqlite3
 
 
+########## helper functions ##########
+
+def switch_timerange(timerange_string):
+    """return the defined int number for the given timerange_string"""
+    switcher = {
+        "long_term": 1,
+        "short_term": 2,
+        "mid_term": 3
+    }
+    return switcher.get(timerange_string)
+
+
+def objects_to_list(object_list):
+    """create an attribute list of the given objects"""
+    object_attribute_list = []
+    for object in object_list:
+        object_attribute_list.append(object.to_tuple())
+
+    return object_attribute_list
+
+
+def extract(lst):
+    """return every first element of a more dimensional list"""
+    return [item[0] for item in lst]
+
+
+def get_timeranges_of_user_artists(user):
+    """get every artist id of the given user object"""
+    timeranges_multiple = []
+    for artist in user.artists:
+        timeranges_multiple.append(artist.time_range)
+
+    # remove the duplicate entries of the time range ids
+    return list(set(timeranges_multiple))
+
+
 class DB:
     def __init__(self, file_location):
         self.file_location = file_location
         self.conn = self.get_connection()
-
-    ########## helper functions ##########
 
     def get_connection(self):
         """Return the connection to the given database file"""
@@ -17,27 +51,6 @@ class DB:
         except Exception as e:
             logging.error("AT db.get_connection %s", e)
         return conn
-
-    def switch_timerange(self, timerange_string):
-        """return the defined int number for the given timerange_string"""
-        switcher = {
-            "long_term": 1,
-            "short_term": 2,
-            "mid_term": 3
-        }
-        return switcher.get(timerange_string)
-
-    def objects_to_list(self, object_list):
-        """create an attribute list of the given objects"""
-        object_attribute_list = []
-        for object in object_list:
-            object_attribute_list.append(object.to_tuple())
-
-        return object_attribute_list
-
-    def extract(self, lst):
-        """return every first element of a more dimensional list"""
-        return [item[0] for item in lst]
 
     ########## user functions ##########
 
@@ -55,7 +68,7 @@ class DB:
     def insert_users(self, users):
         """insert a list of users - given by a object list"""
         cursor = self.conn.cursor()
-        users_list = self.objects_to_list(users)
+        users_list = objects_to_list(users)
         try:
             cursor.executemany("INSERT OR IGNORE INTO user ('user_id', 'user_name' ) VALUES (?, ?)", users_list)
             self.conn.commit()
@@ -70,7 +83,7 @@ class DB:
     def insert_artists(self, artists):
         """map the artists array and prepare a new one with a null value of the AI primary key"""
         cursor = self.conn.cursor()
-        artist_list = self.objects_to_list(artists)
+        artist_list = objects_to_list(artists)
         try:
             cursor.executemany("INSERT OR IGNORE INTO artist ('artist_id', 'artist_name') VALUES (?,?)", artist_list)
             self.conn.commit()
@@ -107,19 +120,10 @@ class DB:
         cursor.close()
         return artist_id[0]
 
-    def get_timeranges_of_user_artists(self, user):
-        """get every artist id of the given user object"""
-        timeranges_multiple = []
-        for artist in user.artists:
-            timeranges_multiple.append(artist.time_range)
-
-        # remove the duplicate entries of the time range ids
-        return list(set(timeranges_multiple))
-
     def delete_artists_by_timeranges(self, user):
         """delete all the current artists which have the same time ranges as the artists in the user.artists list"""
         cursor = self.conn.cursor()
-        time_ranges = self.get_timeranges_of_user_artists(user)
+        time_ranges = get_timeranges_of_user_artists(user)
         for time_range in time_ranges:
             try:
                 cursor.execute("DELETE FROM user_has_artist WHERE timerange = ? AND user_id = ?",
@@ -167,7 +171,7 @@ class DB:
 
     def insert_groups(self, groups):
         cursor = self.conn.cursor()
-        groups_list = self.objects_to_list(groups)
+        groups_list = objects_to_list(groups)
         try:
             cursor.executemany("INSERT OR IGNORE INTO user_group ('group_id', 'group_name') VALUES (?, ?)", groups_list)
             self.conn.commit()
@@ -196,7 +200,7 @@ class DB:
     def insert_songs(self, songs):
         cursor = self.conn.cursor()
 
-        prepared_data = self.objects_to_list(songs)
+        prepared_data = objects_to_list(songs)
 
         try:
             cursor.executemany("INSERT OR IGNORE INTO  song ('song_id', 'song_title', 'artist_id') VALUES (?, ?, ?)",
@@ -234,7 +238,7 @@ class DB:
                 logging.error("AT db.get_matched_songs_for_two_users %s", e)
 
         cursor.close()
-        return self.extract(matched_songs)
+        return extract(matched_songs)
 
     def get_matched_song_ids_for_group(self, group):
         """get all artists from the users in the list - and their songs"""
@@ -254,7 +258,7 @@ class DB:
             logging.error("AT db.get_matched_songs_for_group %s", e)
 
         artists = cursor.fetchall()
-        artist_ids = self.extract(artists)
+        artist_ids = extract(artists)
 
         try:
             sql_song_ids = ("SELECT song.song_id FROM song "
@@ -266,4 +270,4 @@ class DB:
             logging.error("AT db.get_matched_songs_for_group %s", e)
 
         songs = cursor.fetchall()
-        return self.extract(songs)
+        return extract(songs)
