@@ -29,7 +29,7 @@ def main():
     ftp_client = ssh.open_sftp()
 
     # Define paths
-    server_path = CONFIG["server-path"]
+    server_path = CONFIG["server-path-to-groups"]
 
     # List files on server:
     dirs = ftp_client.listdir(server_path)
