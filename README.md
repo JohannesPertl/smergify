@@ -6,7 +6,7 @@
 ## Raspberry Pi
 - [x] SSH Key
 - [x] DuckDNS
-- [ ] Complete Setup as bash script
+- [x] Complete Setup as bash script
 
 ## Cronjobs
 - [ ] Every week: [Smergify without arguments](#smergify)
@@ -69,6 +69,8 @@ Python
 
 
 # Setup
+
+* [Basic configuration for a new Raspbian installation on RaspberryPi](https://gist.github.com/LiliOlczak/6e63ae014ddffc5ef5bd871257d489b6)
 
 * Install the required packages in [requirements.txt](requirements.txt)
 
