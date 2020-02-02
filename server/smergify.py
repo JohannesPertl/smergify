@@ -7,15 +7,17 @@ from datetime import datetime
 
 import yaml
 
-# Constants
 from server.db import DB
 from server.entities.artist import Artist
 from server.entities.group import Group
+from server.entities.playlist import Playlist
 from server.entities.song import Song
 from server.entities.user import User
 
+# Constants
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
+SCOPE = "user-top-read playlist-modify-public playlist-modify-private"
 
 # CONFIG
 with open(os.path.join(ROOT_PATH, "config.yaml")) as config_file:
@@ -41,31 +43,42 @@ def main():
 
     # Create playlists for every user in every group
     for group in groups:
-        group_songs = get_songs_for_group(db, group)
-        playlist_songs = randomize_songs(group_songs)
+        playlist_songs = generate_playlist_songs(db, group)
         for user in group.users:
-            create_or_update_playlist(group.group_name, user, playlist_songs)
+            playlist = Playlist(
+                name=group.group_name,
+                user=user,
+                songs=playlist_songs
+            )
+            playlist.create_or_update_spotify_playlist()
 
 
-# BUG: Playlist must public or else it can't be found
-def get_playlist_id_by_name(user, name):
-    playlists = user.spotify.user_playlists(user.spotify_id)["items"]
-    existing_playlists = [p['id'] for p in playlists if p['name'] == name]
-    return existing_playlists[0] if existing_playlists else False
+def randomly_combine_sets(main_set, secondary_set):
+    random.shuffle(main_set)
+    random.shuffle(secondary_set)
+
+    target_playlist_size = CONFIG['maximum-playlist-size']
+    target_main_size = int(target_playlist_size/2)
+
+    combined_set = main_set[:target_main_size]
+    while len(combined_set) < target_playlist_size:
+        combined_set.append(secondary_set.pop())
+
+    return combined_set
 
 
-def create_or_update_playlist(name, user, song_ids, public=True):
-    """Create new playlist or update the tracks it's already existing"""
-    playlist_id = get_playlist_id_by_name(user, name)
-    if playlist_id:
-        # Updating playlist
-        user.spotify.user_playlist_replace_tracks(user, playlist_id, song_ids)
-        logging.info(f"[{datetime.now()}] Playlist \"{name}\" was updated for user \"{user.user_name}\"")
-    else:
-        # Creating new playlist
-        playlist = user.spotify.user_playlist_create(user.spotify_id, name, public=public)
-        user.spotify.user_playlist_add_tracks(user.user_id, playlist['id'], song_ids)
-        logging.info(f"[{datetime.now()}] New playlist \"{name}\" was created for user \"{user.user_name}\"")
+def generate_playlist_songs(db, group):
+    non_overlapping_songs = db.get_matched_song_ids_for_group(group)
+    if group.is_pair():
+        pair_songs = db.get_matched_song_ids_for_two_users(group)
+        if len(pair_songs) > CONFIG['minimum-playlist-size']:
+            return randomly_combine_sets(pair_songs, non_overlapping_songs)
+    return reduce_songs(non_overlapping_songs)
+
+
+def reduce_songs(songs):
+    max_size = CONFIG['maximum-playlist-size']
+    return songs if len(songs) < max_size else random.sample(songs, max_size)
 
 
 def arguments_given():
@@ -110,6 +123,12 @@ def create_users_for_groups(groups):
                 user = User(
                     user_name=user_name,
                     user_group=group
+                )
+                user.authenticate_spotify(
+                    app_id=CONFIG['app-id'],
+                    app_secret=CONFIG['app-secret'],
+                    redirect_uri=CONFIG['redirect-uri'],
+                    scope=SCOPE
                 )
                 group.users.append(user)
                 users_to_return.append(user)
@@ -164,19 +183,6 @@ def create_artist_songs(artists, spotify):
             artist.songs.append(song)
 
     return songs_to_return
-
-
-def get_songs_for_group(db, group):
-    if group.is_pair():
-        pair_songs = db.get_matched_song_ids_for_two_users(group)
-        if len(pair_songs) > CONFIG['minimum-playlist-size']:
-            return pair_songs
-    return db.get_matched_song_ids_for_group(group)
-
-
-def randomize_songs(songs):
-    max_size = CONFIG['maximum-playlist-size']
-    return songs if len(songs) < max_size else random.sample(songs, max_size)
 
 
 if __name__ == "__main__":
