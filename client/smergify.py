@@ -55,7 +55,7 @@ def main():
     ftp_client.close()
 
     # Execute Smergify remote from server
-    stdin, stdout, stderr = ssh.exec_command("bash start_smergify.sh " + user_group)
+    stdin, stdout, stderr = ssh.exec_command("bash " + CONFIG["smergify-script"] + " " + user_group)
 
     ssh.close()
 
