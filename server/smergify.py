@@ -57,8 +57,8 @@ def randomly_combine_sets(main_set, secondary_set):
     random.shuffle(main_set)
     random.shuffle(secondary_set)
 
-    target_playlist_size = CONFIG['maximum-playlist-size']
-    target_main_size = int(target_playlist_size/2)
+    target_playlist_size = CONFIG['target-playlist-size']
+    target_main_size = int(target_playlist_size / 2)
 
     combined_set = main_set[:target_main_size]
     while len(combined_set) < target_playlist_size:
@@ -77,7 +77,7 @@ def generate_playlist_songs(db, group):
 
 
 def reduce_songs(songs):
-    max_size = CONFIG['maximum-playlist-size']
+    max_size = CONFIG['target-playlist-size']
     return songs if len(songs) < max_size else random.sample(songs, max_size)
 
 
@@ -86,7 +86,7 @@ def arguments_given():
 
 
 def create_group(name):
-    """Create a single group from """
+    """Create a single group from user_groups path"""
     group_path = os.path.join(GROUPS_PATH, name)
     return Group(
         group_name=name,
@@ -137,6 +137,7 @@ def create_users_for_groups(groups):
 
 
 def create_artists_for_users(users):
+    """Create all artists for all terms for a list of users"""
     artists = list()
     for user in users:
         short_term_artists = create_user_artists_in_term(user, "short_term")
