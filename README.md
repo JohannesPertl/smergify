@@ -9,7 +9,7 @@
 - [x] Complete Setup as bash script
 
 ## Cronjobs
-- [ ] Every week: [Smergify without arguments](#smergify)
+- [x] Every day: [Smergify without arguments](#smergify)
 
 ## Client
 Python
