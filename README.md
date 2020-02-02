@@ -70,7 +70,7 @@ Python
 
 # Setup
 
-* [Basic configuration for a new Raspbian installation on RaspberryPi](https://gist.github.com/LiliOlczak/6e63ae014ddffc5ef5bd871257d489b6)
+* [Basic configuration for a new Raspbian installation on RaspberryPi](https://gist.github.com/LiliOlczak/2cb261a6f03f09fcf04d7090a691e30c)
 
 * Install the required packages in [requirements.txt](requirements.txt)
 
