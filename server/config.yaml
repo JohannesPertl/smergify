@@ -1,8 +1,7 @@
----
-app-id: INSERT_SPOTIFY_APP_ID_HERE
-app-secret: INSERT_SPOTIFY_APP_SECRET_HERE
-redirect-uri: INSERT_REDIRECT_URI_HERE
-database-name: INSERT_DATABASE_NAME_HERE
-log-file-name: INSERT_LOG_FILE_NAME_HERE
-minimum-playlist-size: INSERT_THE_MINIMUM_AMOUNT_OF_SONGS_IN_PLAYLIST_HERE
-target-playlist-size: INSERT_THE_DESIRED_AMOUNT_OF_SONGS_IN_PLAYLIST_HERE
+app-id: 92635772b4014626ac2cb7c44097c5c7
+app-secret: 733d71e65f2a4d538f20fa647e801b6e
+redirect-uri: https://binary-kitchen.eu/smergify/
+database-name: data.db
+log-file-name: info.log
+minimum-playlist-size: 15
+target-playlist-size: 50
