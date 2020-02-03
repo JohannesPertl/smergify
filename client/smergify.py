@@ -5,7 +5,7 @@ import spotipy.util as util
 import glob
 
 # get credentials from yaml
-with open("credentials.yaml") as config_file:
+with open("config.yaml") as config_file:
     CONFIG = yaml.safe_load(config_file)
 
 # permissions for spotify app
