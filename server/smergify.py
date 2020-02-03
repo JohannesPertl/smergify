@@ -16,7 +16,7 @@ from server.entities.user import User
 
 # Constants
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-GROUPS_PATH = os.path.join(ROOT_PATH, "user_groups")
+GROUPS_PATH = os.path.join(ROOT_PATH, "groups")
 SCOPE = "user-top-read playlist-modify-public playlist-modify-private"
 
 # CONFIG
@@ -86,7 +86,7 @@ def arguments_given():
 
 
 def create_group(name):
-    """Create a single group from user_groups path"""
+    """Create a single group from groups path"""
     group_path = os.path.join(GROUPS_PATH, name)
     return Group(
         group_name=name,
