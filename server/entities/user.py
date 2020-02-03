@@ -3,6 +3,7 @@ import os
 import sys
 import spotipy
 from spotipy import util
+from datetime import datetime
 
 
 class User:
@@ -15,9 +16,13 @@ class User:
         self.spotify = None
         self.user_id = None
         self.spotify_id = None
+        self.last_updated = None
 
     def to_tuple(self):
-        return self.user_id, self.user_name
+        return self.user_id, self.user_name, self.last_updated
+    
+    def set_last_updated_to_now(self, datetime_format):
+        self.last_updated = datetime.now().strftime(datetime_format)
 
     def authenticate_spotify(self, app_id, app_secret, redirect_uri, scope, cache_path=None):
         if cache_path is None:

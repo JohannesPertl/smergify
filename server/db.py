@@ -65,12 +65,23 @@ class DB:
         cursor.close()
         return user_id[0]
 
+    def get_user_last_updated(self, user):
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("SELECT last_updated FROM user WHERE user_id = ?", (user.user_id,))
+        except BaseException as e:
+            logging.error("AT db.get_user_last_updated_by_name: %s", e)
+
+        user_last_updated = cursor.fetchone()
+        cursor.close()
+        return user_last_updated[0]
+
     def insert_users(self, users):
         """insert a list of users - given by a object list"""
         cursor = self.conn.cursor()
         users_list = objects_to_list(users)
         try:
-            cursor.executemany("INSERT OR IGNORE INTO user ('user_id', 'user_name' ) VALUES (?, ?)", users_list)
+            cursor.executemany("INSERT OR REPLACE INTO user ('user_id', 'user_name', 'last_updated') VALUES (?, ?, ?)", users_list)
             self.conn.commit()
         except BaseException as e:
             logging.error("AT insert_users: %s", e)

@@ -18,6 +18,7 @@ from server.entities.user import User
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 GROUPS_PATH = os.path.join(ROOT_PATH, "groups")
 SCOPE = "user-top-read playlist-modify-public playlist-modify-private"
+DATETIME_FORMAT = "%B %d, %Y %I:%M%p"
 
 # CONFIG
 with open(os.path.join(ROOT_PATH, "config.yaml")) as config_file:
@@ -27,23 +28,36 @@ with open(os.path.join(ROOT_PATH, "config.yaml")) as config_file:
 def main():
     # Define logging config
     logging.basicConfig(filename=os.path.join(ROOT_PATH, "logs", CONFIG["log-file-name"]), level=logging.INFO)
-
-    # Create and link entities
-    groups = create_groups_from_arguments() if arguments_given() else create_all_groups_from_path()
-    users = create_users_for_groups(groups)
-    artists = create_artists_for_users(users)
-    songs = create_artist_songs(artists, users[0].spotify)  # Spotify needs a user token to make requests
-
-    # Save to database
+    # Open Database
     db = DB(os.path.join(ROOT_PATH, CONFIG["database-name"]))
-    db.insert_groups(groups)
-    db.insert_artists(artists)
-    db.insert_users(users)
-    db.insert_songs(songs)
+    # Create and link entities
+    groups = create_groups_from_arguments(GROUPS_PATH) if arguments_given() else create_all_groups_from_path(
+        GROUPS_PATH)
+    users = create_users_for_groups(groups)
+
+    # Check if users had been updated recently to reduce Spotify requests
+    users = check_updated_recently(db, users, CONFIG['days-to-update-users-after'], DATETIME_FORMAT)
+    if users:  # If list of users is not empty
+        artists = create_artists_for_users(users)
+        songs = create_artist_songs(artists, users[0].spotify)  # Spotify needs a user token to make requests
+
+        for user in users:
+            user.set_last_updated_to_now()
+
+        # Save to database
+        db.insert_groups(groups)
+        db.insert_artists(artists)
+        db.insert_users(users)
+        db.insert_songs(songs)
 
     # Create playlists for every user in every group
     for group in groups:
-        playlist_songs = generate_playlist_songs(db, group)
+        playlist_songs = generate_playlist_songs(
+            db=db,
+            group=group,
+            minimum_size=CONFIG['minimum-playlist-size'],
+            target_size=CONFIG['target-playlist-size']
+        )
         for user in group.users:
             playlist = Playlist(
                 name=group.group_name,
@@ -53,31 +67,61 @@ def main():
             playlist.create_or_update_spotify_playlist()
 
 
-def randomly_combine_sets(main_set, secondary_set):
-    random.shuffle(main_set)
-    random.shuffle(secondary_set)
+def randomly_combine_sets(first_set, second_set, fraction, target_size):
+    """
+    Combine two sets randomly, by reducing the first one to a fraction of its size
+    and filling it up with content of the second one
+    :param first_set First set, which gets reduced by a fraction
+    :param second_set: Second set, which is used to fill up the target set
+    :param target_size: The size of the final set
+    :param fraction: Integer, defines how the two sets get mixed, i.e. 2: Half of first, half of second set
+    :returns The combined set
 
-    target_playlist_size = CONFIG['target-playlist-size']
-    target_main_size = int(target_playlist_size / 2)
+    """
+    random.shuffle(first_set)
+    random.shuffle(second_set)
 
-    combined_set = main_set[:target_main_size]
-    while len(combined_set) < target_playlist_size:
-        combined_set.append(secondary_set.pop())
+    target_main_size = int(target_size / fraction)
+
+    combined_set = first_set[:target_main_size]
+    while len(combined_set) < target_size:
+        combined_set.append(second_set.pop())
 
     return combined_set
 
 
-def generate_playlist_songs(db, group):
+def generate_playlist_songs(db, group, minimum_size, target_size):
+    """
+    Generate a list of songs for a group
+    :returns List of songs
+    """
     non_overlapping_songs = db.get_matched_song_ids_for_group(group)
     if group.is_pair():
         pair_songs = db.get_matched_song_ids_for_two_users(group)
-        if len(pair_songs) > CONFIG['minimum-playlist-size']:
-            return randomly_combine_sets(pair_songs, non_overlapping_songs)
-    return reduce_songs(non_overlapping_songs)
+        if len(pair_songs) > minimum_size:
+            return randomly_combine_sets(pair_songs, non_overlapping_songs, 2, target_size)
+    return reduce_songs(non_overlapping_songs, target_size)
 
 
-def reduce_songs(songs):
-    max_size = CONFIG['target-playlist-size']
+def check_updated_recently(db, users, days_to_update_after, datetime_format):
+    """
+    Check when users had last been updated by comparing the current time with last_updated in DB
+    :returns A list of users that need to be updated or created
+    """
+    users_to_update = list()
+    now = datetime.now()
+    for user in users:
+        last_updated = db.get_user_last_updated(user)
+        if last_updated:  # User is already existing
+            diff = now - datetime.strptime(last_updated, datetime_format)
+            if diff.days < days_to_update_after:
+                continue
+        users_to_update.append(user)
+    return users_to_update
+
+
+def reduce_songs(songs, max_size):
+    max_size = max_size
     return songs if len(songs) < max_size else random.sample(songs, max_size)
 
 
@@ -85,30 +129,31 @@ def arguments_given():
     return len(sys.argv) > 1
 
 
-def create_group(name):
-    """Create a single group from groups path"""
-    group_path = os.path.join(GROUPS_PATH, name)
+def create_group(name, path):
+    """Create a single group from a folder"""
+    group_path = os.path.join(path, name)
     return Group(
         group_name=name,
         group_path=group_path
     )
 
 
-def create_groups_from_arguments():
-    logging.info(f"[{datetime.now()}] Received new request for group(s) \"{' '.join(sys.argv[1:])}\"")
+def create_groups_from_arguments(groups_path):
+    logging.info(
+        f"[{datetime.now().strftime(DATETIME_FORMAT)}] Received new request for group(s) \"{' '.join(sys.argv[1:])}\"")
     groups = list()
     for name in sys.argv[1:]:
-        new_group = create_group(name)
+        new_group = create_group(name, groups_path)
         groups.append(new_group)
     return groups
 
 
-def create_all_groups_from_path():
-    logging.info(f"[{datetime.now()}] Received new request for all groups")
+def create_all_groups_from_path(path):
+    logging.info(f"[{datetime.now().strftime(DATETIME_FORMAT)}] Received new request for all groups")
     groups = list()
-    for f in os.scandir(GROUPS_PATH):
+    for f in os.scandir(path):
         if f.is_dir():
-            new_group = create_group(f.name)
+            new_group = create_group(f.name, path)
             groups.append(new_group)
     return groups
 
