@@ -3,6 +3,7 @@ from datetime import datetime
 
 DATETIME_FORMAT = "%B %d, %Y %I:%M%p"
 
+
 class Playlist:
     def __init__(self, name, user, songs):
         self.name = name
@@ -21,11 +22,11 @@ class Playlist:
         if playlist_id:
             # Updating playlist
             self.user.spotify.user_playlist_replace_tracks(self.user, playlist_id, self.songs)
-            logging.info(f"[{datetime.now().strftime(DATETIME_FORMAT)}] Playlist \"{self.name}\" was updated for user \"{self.user.user_name}\"")
+            logging.info(
+                f"[{datetime.now().strftime(DATETIME_FORMAT)}] Playlist \"{self.name}\" was updated for user \"{self.user.user_name}\"")
         else:
             # Creating new playlist
             playlist = self.user.spotify.user_playlist_create(self.user.spotify_id, self.name, public=public)
             self.user.spotify.user_playlist_add_tracks(self.user.user_id, playlist['id'], self.songs)
             logging.info(
                 f"[{datetime.now().strftime(DATETIME_FORMAT)}] New playlist \"{self.name}\" was created for user \"{self.user.user_name}\"")
-

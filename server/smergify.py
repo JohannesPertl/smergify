@@ -42,7 +42,7 @@ def main():
         songs = create_artist_songs(artists, users[0].spotify)  # Spotify needs a user token to make requests
 
         for user in users:
-            user.set_last_updated_to_now()
+            user.set_last_updated_to_now(DATETIME_FORMAT)
 
         # Save to database
         db.insert_groups(groups)

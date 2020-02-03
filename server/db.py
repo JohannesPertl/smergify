@@ -74,7 +74,7 @@ class DB:
 
         user_last_updated = cursor.fetchone()
         cursor.close()
-        return user_last_updated[0]
+        return user_last_updated[0] if user_last_updated else None
 
     def insert_users(self, users):
         """insert a list of users - given by a object list"""
