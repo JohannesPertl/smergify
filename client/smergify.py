@@ -68,8 +68,7 @@ def input_group_name():
     while True:
         group_name = input("Please enter your groupname: ")
         if group_name:
-            group_name.replace(" ", "")  # Remove whitespace
-            return group_name
+            return group_name.replace(" ", "")  # Remove whitespace
 
 
 # Validate username
