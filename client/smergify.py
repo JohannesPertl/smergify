@@ -29,7 +29,7 @@ def main():
     ftp_client = ssh.open_sftp()
 
     # Define paths
-    server_path = CONFIG["server-path"]
+    server_path = CONFIG["server-path-to-groups"]
 
     # List files on server:
     dirs = ftp_client.listdir(server_path)
@@ -55,7 +55,7 @@ def main():
     ftp_client.close()
 
     # Execute Smergify remote from server
-    stdin, stdout, stderr = ssh.exec_command("bash start_smergify.sh " + user_group)
+    stdin, stdout, stderr = ssh.exec_command("bash " + CONFIG["smergify-script"] + " " + user_group)
 
     ssh.close()
 
