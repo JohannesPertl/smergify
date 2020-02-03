@@ -57,7 +57,6 @@ Python
 - [x] Get users of every usergroup and authenticate them
     - [x] Use Regex to read username from .cache file
     - [x] Save users in DB
-        - [ ] If already existing but new group: Change to new group
 - [x] Get artists from users via spotipy
     - [x] Save artists in DB
 - [x] Get top songs from every artist
