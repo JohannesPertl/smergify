@@ -54,7 +54,7 @@ pip3 install -r requirements.txt
   * Client ID, Client Secret and Redirect URI of your previously created App
   * Username, hostname and port of your server
   * The path to your private key. Leave empty if not needed 
-  * Your servers password. Leave empty if not needed
+  * Your server's password. Leave empty if not needed
   * The absolute path to the [playlist groups](server/groups) on the server
   * The absolute path to the server [bash script](server/start_smergify_from_client.sh) starting the script
 
