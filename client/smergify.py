@@ -1,8 +1,9 @@
-import os
-import paramiko
-import yaml
-import spotipy.util as util
 import glob
+import os
+
+import paramiko
+import spotipy.util as util
+import yaml
 
 # get credentials from yaml
 with open("config.yaml") as config_file:
@@ -23,7 +24,7 @@ def main():
     )
 
     # User input for group-name:
-    user_group = input("Please enter your groupname: ")
+    user_group = input_group_name()
 
     # FTP client:
     ftp_client = ssh.open_sftp()
@@ -60,6 +61,15 @@ def main():
     ssh.close()
 
     delete_cache_files_on_client()
+
+
+# Validate group name
+def input_group_name():
+    while True:
+        group_name = input("Please enter your groupname: ")
+        if group_name:
+            group_name.replace(" ", "")  # Remove whitespace
+            return group_name
 
 
 # Validate username
