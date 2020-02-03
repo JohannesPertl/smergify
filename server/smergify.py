@@ -71,10 +71,10 @@ def randomly_combine_sets(first_set, second_set, fraction, target_size):
     """
     Combine two sets randomly, by reducing the first one to a fraction of its size
     and filling it up with content of the second one
-    :param first_set First set, which gets reduced by a fraction
+    :param first_set First set, which gets reduced by a fraction of target size
     :param second_set: Second set, which is used to fill up the target set
     :param target_size: The size of the final set
-    :param fraction: Integer, defines how the two sets get mixed, i.e. 2: Half of first, half of second set
+    :param fraction: defines how the two sets get mixed, i.e. 2: Half of first, half of second set
     :returns The combined set
 
     """
@@ -99,7 +99,7 @@ def generate_playlist_songs(db, group, minimum_size, target_size):
     if group.is_pair():
         pair_songs = db.get_matched_song_ids_for_two_users(group)
         if len(pair_songs) > minimum_size:
-            return randomly_combine_sets(pair_songs, non_overlapping_songs, 2, target_size)
+            return randomly_combine_sets(pair_songs, non_overlapping_songs, 1.5, target_size)
     return reduce_songs(non_overlapping_songs, target_size)
 
 
