@@ -55,8 +55,7 @@ def main():
         playlist_songs = generate_playlist_songs(
             db=db,
             group=group,
-            minimum_size=CONFIG['minimum-playlist-size'],
-            target_size=CONFIG['target-playlist-size']
+            target_size=CONFIG['playlist-size']
         )
         for user in group.users:
             playlist = Playlist(
@@ -69,20 +68,20 @@ def main():
 
 def randomly_combine_sets(first_set, second_set, fraction, target_size):
     """
-    Combine two sets randomly, by reducing the first one to a fraction of its size
+    Combine two sets randomly, by reducing the first one to a fraction of target size
     and filling it up with content of the second one
     :param first_set First set, which gets reduced by a fraction of target size
     :param second_set: Second set, which is used to fill up the target set
     :param target_size: The size of the final set
-    :param fraction: defines how the two sets get mixed, i.e. 2: Half of first, half of second set
+    :param fraction: defines how the two sets get mixed, i.e. 0.75: 3 quarters of first_set, 1 quarter of second
     :returns The combined set
 
     """
     random.shuffle(first_set)
     random.shuffle(second_set)
 
-    target_main_size = int(target_size / fraction)
-
+    target_main_size = int(target_size * fraction)
+    print(target_main_size)
     combined_set = first_set[:target_main_size]
     while len(combined_set) < target_size:
         combined_set.append(second_set.pop())
@@ -90,7 +89,7 @@ def randomly_combine_sets(first_set, second_set, fraction, target_size):
     return combined_set
 
 
-def generate_playlist_songs(db, group, minimum_size, target_size):
+def generate_playlist_songs(db, group, target_size):
     """
     Generate a list of songs for a group
     :returns List of songs
@@ -98,8 +97,7 @@ def generate_playlist_songs(db, group, minimum_size, target_size):
     non_overlapping_songs = db.get_matched_song_ids_for_group(group)
     if group.is_pair():
         pair_songs = db.get_matched_song_ids_for_two_users(group)
-        if len(pair_songs) > minimum_size:
-            return randomly_combine_sets(pair_songs, non_overlapping_songs, 1.5, target_size)
+        return randomly_combine_sets(pair_songs, non_overlapping_songs, 0.75, target_size)
     return reduce_songs(non_overlapping_songs, target_size)
 
 
@@ -121,7 +119,6 @@ def check_updated_recently(db, users, days_to_update_after, datetime_format):
 
 
 def reduce_songs(songs, max_size):
-    max_size = max_size
     return songs if len(songs) < max_size else random.sample(songs, max_size)
 
 
